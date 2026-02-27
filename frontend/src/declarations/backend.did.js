@@ -19,6 +19,20 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
+export const Time = IDL.Int;
+export const Comment = IDL.Record({
+  'id' : IDL.Nat,
+  'createdAt' : Time,
+  'text' : IDL.Text,
+  'author' : IDL.Principal,
+  'projectId' : IDL.Nat,
+  'elementId' : IDL.Text,
+  'position' : IDL.Record({
+    'x' : IDL.Float64,
+    'y' : IDL.Float64,
+    'z' : IDL.Float64,
+  }),
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -51,7 +65,6 @@ export const ProjectStatus = IDL.Variant({
   'processing' : IDL.Null,
   'failed' : IDL.Null,
 });
-export const Time = IDL.Int;
 export const Project = IDL.Record({
   'id' : IDL.Nat,
   'status' : ProjectStatus,
@@ -134,6 +147,16 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addComment' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Record({ 'x' : IDL.Float64, 'y' : IDL.Float64, 'z' : IDL.Float64 }),
+        IDL.Text,
+      ],
+      [Comment],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createCheckoutSession' : IDL.Func(
       [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
@@ -145,10 +168,18 @@ export const idlService = IDL.Service({
       [IDL.Nat],
       [],
     ),
+  'createSharedLink' : IDL.Func([IDL.Nat], [IDL.Text], []),
+  'deleteComment' : IDL.Func([IDL.Nat], [], []),
   'deleteProject' : IDL.Func([IDL.Nat], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getComments' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], ['query']),
   'getProject' : IDL.Func([IDL.Nat], [Project], ['query']),
+  'getProjectByShareToken' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(Project)],
+      ['query'],
+    ),
   'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
   'getUser' : IDL.Func([IDL.Principal], [User], ['query']),
   'getUserProfile' : IDL.Func(
@@ -197,6 +228,20 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
+  const Time = IDL.Int;
+  const Comment = IDL.Record({
+    'id' : IDL.Nat,
+    'createdAt' : Time,
+    'text' : IDL.Text,
+    'author' : IDL.Principal,
+    'projectId' : IDL.Nat,
+    'elementId' : IDL.Text,
+    'position' : IDL.Record({
+      'x' : IDL.Float64,
+      'y' : IDL.Float64,
+      'z' : IDL.Float64,
+    }),
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -229,7 +274,6 @@ export const idlFactory = ({ IDL }) => {
     'processing' : IDL.Null,
     'failed' : IDL.Null,
   });
-  const Time = IDL.Int;
   const Project = IDL.Record({
     'id' : IDL.Nat,
     'status' : ProjectStatus,
@@ -306,6 +350,20 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addComment' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Record({
+            'x' : IDL.Float64,
+            'y' : IDL.Float64,
+            'z' : IDL.Float64,
+          }),
+          IDL.Text,
+        ],
+        [Comment],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createCheckoutSession' : IDL.Func(
         [IDL.Vec(ShoppingItem), IDL.Text, IDL.Text],
@@ -317,10 +375,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat],
         [],
       ),
+    'createSharedLink' : IDL.Func([IDL.Nat], [IDL.Text], []),
+    'deleteComment' : IDL.Func([IDL.Nat], [], []),
     'deleteProject' : IDL.Func([IDL.Nat], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getComments' : IDL.Func([IDL.Nat], [IDL.Vec(Comment)], ['query']),
     'getProject' : IDL.Func([IDL.Nat], [Project], ['query']),
+    'getProjectByShareToken' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(Project)],
+        ['query'],
+      ),
     'getStripeSessionStatus' : IDL.Func([IDL.Text], [StripeSessionStatus], []),
     'getUser' : IDL.Func([IDL.Principal], [User], ['query']),
     'getUserProfile' : IDL.Func(

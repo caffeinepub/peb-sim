@@ -2,13 +2,34 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useActor } from "@/hooks/useActor";
-import { useGetProject } from "@/hooks/useQueries";
+import {
+  useGetProject,
+  useGetComments,
+  useAddComment,
+  useDeleteComment,
+  useCreateSharedLink,
+} from "@/hooks/useQueries";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Settings, Layers, Wrench, Palette, Calculator } from "lucide-react";
-import BuildingSimulator, { type BuildingSimulatorHandle, type BuildingParams } from "@/components/BuildingSimulator";
+import { Separator } from "@/components/ui/separator";
+import {
+  ArrowLeft,
+  Settings,
+  Layers,
+  Wrench,
+  Palette,
+  Calculator,
+  DollarSign,
+  Download,
+  Share2,
+} from "lucide-react";
+import { toast } from "sonner";
+import BuildingSimulator, {
+  type BuildingSimulatorHandle,
+  type BuildingParams,
+} from "@/components/BuildingSimulator";
 import CladdingControls, { type CladdingState } from "@/components/CladdingControls";
 import AccessoryControls, { type AccessoryState } from "@/components/AccessoryControls";
 import BrandingControls, { type BrandingState } from "@/components/BrandingControls";
@@ -19,19 +40,48 @@ import EngineeringPanel from "@/components/EngineeringPanel";
 import EngineeringInputsForm from "@/components/EngineeringInputsForm";
 import ViewModeToggle from "@/components/ViewModeToggle";
 import VideoExportButton from "@/components/VideoExportButton";
+import GADrawingsExportButton from "@/components/GADrawingsExportButton";
+import AdvancedExportButtons from "@/components/AdvancedExportButtons";
+import RateCardPanel from "@/components/RateCardPanel";
+import ShareButton from "@/components/ShareButton";
+import CommentSidebar from "@/components/CommentSidebar";
+import CommentInputPopover from "@/components/CommentInputPopover";
+import ConnectionDetailModal from "@/components/ConnectionDetailModal";
 import { DEFAULT_RAL_COLORS } from "@/data/ralColors";
 import type { GroundTexture } from "@/components/EnvironmentScene";
 import type { VehiclePreset } from "@/components/ClearanceCheckBox";
 import type { LoadInputs } from "@/utils/calculateBuildingStats";
 import type { Project } from "@/backend";
+import type { RateCard } from "@/utils/calculateProjectCost";
+import { calculateProjectCost } from "@/utils/calculateProjectCost";
+import { formatCurrency } from "@/utils/calculateProjectCost";
+import type { BuildingState } from "@/utils/gaDrawingGenerator";
+import type { ConnectionType, HotspotData } from "@/components/ConnectionHotspots";
+
+const DEFAULT_RATES: RateCard = {
+  primarySteel: 1200,
+  secondarySteel: 1000,
+  sheeting: 25,
+  erectionLabor: 15,
+};
+
+interface CommentPopoverState {
+  visible: boolean;
+  screenX: number;
+  screenY: number;
+  worldPosition: { x: number; y: number; z: number };
+  elementId: string;
+}
 
 export default function ProjectViewer() {
-  const { projectId } = useParams({ from: "/authenticated/project/$projectId" });
+  const { projectId } = useParams({ from: "/project/$projectId" });
   const navigate = useNavigate();
   const { actor } = useActor();
   const queryClient = useQueryClient();
   const simulatorRef = useRef<BuildingSimulatorHandle>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const projectIdBigInt = BigInt(projectId);
 
   // Erection step state
   const [erectionStep, setErectionStep] = useState(0);
@@ -84,8 +134,36 @@ export default function ProjectViewer() {
     liveLoad: 1.0,
   });
 
-  // Fetch project using the shared hook (properly typed as Project)
-  const { data: project, isLoading } = useGetProject(BigInt(projectId));
+  // Rate card state
+  const [rates, setRates] = useState<RateCard>(DEFAULT_RATES);
+
+  // Connection detail modal
+  const [connectionModal, setConnectionModal] = useState<{
+    open: boolean;
+    type: ConnectionType | null;
+  }>({ open: false, type: null });
+
+  // Comment popover state
+  const [commentPopover, setCommentPopover] = useState<CommentPopoverState>({
+    visible: false,
+    screenX: 0,
+    screenY: 0,
+    worldPosition: { x: 0, y: 0, z: 0 },
+    elementId: "",
+  });
+
+  // Highlighted comment
+  const [highlightedCommentId, setHighlightedCommentId] = useState<bigint | null>(null);
+
+  // Fetch project
+  const { data: project, isLoading } = useGetProject(projectIdBigInt);
+
+  // Fetch comments
+  const { data: comments = [] } = useGetComments(projectIdBigInt);
+
+  // Comment mutations
+  const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
 
   // Initialise local state from backend data once loaded
   useEffect(() => {
@@ -176,6 +254,35 @@ export default function ProjectViewer() {
     shutterHeight: 4.0,
   };
 
+  // Building state for GA drawings / exports
+  const buildingState: BuildingState = {
+    span: buildingParams.width,
+    length: buildingParams.length,
+    height: buildingParams.height,
+    baySpacing: buildingParams.baySpacing,
+    numBays: buildingParams.numBays,
+    roofPitch: Math.atan2(
+      buildingParams.ridgeHeight - buildingParams.height,
+      buildingParams.width / 2
+    ) * (180 / Math.PI),
+    purlinSpacing: 1.5,
+  };
+
+  // Cost calculation
+  const halfSpan = buildingParams.width / 2;
+  const ridgeH = buildingParams.ridgeHeight;
+  const rafterLen = Math.sqrt(halfSpan * halfSpan + (ridgeH - buildingParams.height) ** 2);
+  const sheetingArea = 2 * rafterLen * buildingParams.length;
+  const floorArea = buildingParams.width * buildingParams.length;
+  const primarySteelWeight = memberDimensions.columnCount * buildingParams.height * 0.048 * 1.1 / 1000;
+  const secondarySteelWeight = memberDimensions.rafterCount * rafterLen * 0.04 * 1.1 / 1000;
+  const costBreakdown = calculateProjectCost(rates, {
+    primarySteelWeight,
+    secondarySteelWeight,
+    sheetingArea,
+    floorArea,
+  });
+
   const handleStartAnimation = useCallback((onComplete: () => void) => {
     setErectionStep(0);
     simulatorRef.current?.playFullSequence(onComplete);
@@ -193,6 +300,26 @@ export default function ProjectViewer() {
 
   const handleAccessoryChange = (state: AccessoryState) => {
     setAccessoryState({ ...state, numBays });
+  };
+
+  const handleHotspotClick = useCallback((hotspot: HotspotData) => {
+    setConnectionModal({ open: true, type: hotspot.type });
+  }, []);
+
+  const handleCommentSubmit = async (text: string) => {
+    await addComment.mutateAsync({
+      projectId: projectIdBigInt,
+      elementId: commentPopover.elementId,
+      position: commentPopover.worldPosition,
+      text,
+    });
+    setCommentPopover((prev) => ({ ...prev, visible: false }));
+    toast.success("Annotation added!");
+  };
+
+  const handleDeleteComment = async (commentId: bigint) => {
+    await deleteComment.mutateAsync({ commentId, projectId: projectIdBigInt });
+    toast.success("Annotation deleted.");
   };
 
   if (isLoading) {
@@ -225,11 +352,12 @@ export default function ProjectViewer() {
               {buildingParams.length}m × {buildingParams.width}m × {buildingParams.height}m
             </p>
           </div>
+          <ShareButton projectId={projectIdBigInt} projectName={projectName} />
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="cladding" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid grid-cols-4 mx-2 mt-2 h-8">
+          <TabsList className="grid grid-cols-5 mx-2 mt-2 h-8">
             <TabsTrigger value="cladding" className="text-xs px-1" title="Cladding & Environment">
               <Layers className="w-3 h-3" />
             </TabsTrigger>
@@ -241,6 +369,9 @@ export default function ProjectViewer() {
             </TabsTrigger>
             <TabsTrigger value="engineering" className="text-xs px-1" title="Engineering">
               <Calculator className="w-3 h-3" />
+            </TabsTrigger>
+            <TabsTrigger value="cost" className="text-xs px-1" title="Cost & Export">
+              <DollarSign className="w-3 h-3" />
             </TabsTrigger>
           </TabsList>
 
@@ -286,6 +417,57 @@ export default function ProjectViewer() {
                   openings={openingData}
                   loads={loadInputs}
                 />
+              </TabsContent>
+
+              <TabsContent value="cost" className="mt-0 space-y-3">
+                {/* Rate Card */}
+                <div className="bg-card border border-border rounded-lg p-3">
+                  <RateCardPanel rates={rates} onChange={setRates} />
+                </div>
+
+                {/* Total Cost Display */}
+                <div className="bg-card border border-amber-500/30 rounded-lg p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                    Total Project Cost
+                  </p>
+                  <p className="text-2xl font-mono font-bold text-amber-400">
+                    {costBreakdown.formattedTotal}
+                  </p>
+                  <div className="space-y-1 pt-1 border-t border-border">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Primary Steel</span>
+                      <span className="font-mono">{formatCurrency(costBreakdown.primarySteelCost)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Secondary Steel</span>
+                      <span className="font-mono">{formatCurrency(costBreakdown.secondarySteelCost)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Sheeting</span>
+                      <span className="font-mono">{formatCurrency(costBreakdown.sheetingCost)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Erection Labor</span>
+                      <span className="font-mono">{formatCurrency(costBreakdown.erectionCost)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Export Buttons */}
+                <div className="bg-card border border-border rounded-lg p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold flex items-center gap-1">
+                    <Download className="w-3 h-3" /> Exports
+                  </p>
+                  <GADrawingsExportButton
+                    buildingState={buildingState}
+                    projectName={projectName}
+                  />
+                  <Separator className="bg-border" />
+                  <AdvancedExportButtons
+                    buildingState={buildingState}
+                    projectName={projectName}
+                  />
+                </div>
               </TabsContent>
             </div>
           </ScrollArea>
@@ -355,9 +537,47 @@ export default function ProjectViewer() {
             clearancePreset={clearancePreset}
             onWalkthroughExit={() => setIsWalkthrough(false)}
             onErectionStepChange={setErectionStep}
+            onHotspotClick={handleHotspotClick}
+            comments={comments}
+            onCommentMarkerClick={(comment) => setHighlightedCommentId(comment.id)}
+            onDoubleClickElement={(elementId, worldPos, screenPos) => {
+              setCommentPopover({
+                visible: true,
+                screenX: screenPos.x,
+                screenY: screenPos.y,
+                worldPosition: worldPos,
+                elementId,
+              });
+            }}
           />
+
+          {/* Comment input popover */}
+          {commentPopover.visible && (
+            <CommentInputPopover
+              screenPosition={{ x: commentPopover.screenX, y: commentPopover.screenY }}
+              elementId={commentPopover.elementId}
+              onSubmit={handleCommentSubmit}
+              onCancel={() => setCommentPopover((prev) => ({ ...prev, visible: false }))}
+            />
+          )}
         </div>
       </div>
+
+      {/* Comment sidebar */}
+      <CommentSidebar
+        comments={comments}
+        onDelete={handleDeleteComment}
+        readOnly={false}
+        highlightedCommentId={highlightedCommentId}
+        onCommentClick={(comment) => setHighlightedCommentId(comment.id)}
+      />
+
+      {/* Connection detail modal */}
+      <ConnectionDetailModal
+        open={connectionModal.open}
+        connectionType={connectionModal.type}
+        onClose={() => setConnectionModal({ open: false, type: null })}
+      />
     </div>
   );
 }

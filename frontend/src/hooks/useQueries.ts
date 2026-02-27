@@ -1,7 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import type { UserProfile, Project, ProjectStatus, SubscriptionTier, ShoppingItem, StripeConfiguration, EngineeringInputs, BrandingSettings } from '../backend';
+import type {
+  UserProfile,
+  Project,
+  ProjectStatus,
+  SubscriptionTier,
+  ShoppingItem,
+  StripeConfiguration,
+  EngineeringInputs,
+  BrandingSettings,
+  Comment,
+} from '../backend';
 
 // ─── User Profile ────────────────────────────────────────────────────────────
 
@@ -269,5 +279,82 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !actorFetching,
+  });
+}
+
+// ─── Shared Links ────────────────────────────────────────────────────────────
+
+export function useCreateSharedLink() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (projectId: bigint): Promise<string> => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createSharedLink(projectId);
+    },
+  });
+}
+
+export function useGetProjectByShareToken(token: string | null) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Project | null>({
+    queryKey: ['shareToken', token],
+    queryFn: async () => {
+      if (!actor || !token) return null;
+      return actor.getProjectByShareToken(token);
+    },
+    enabled: !!actor && !actorFetching && !!token,
+    retry: false,
+  });
+}
+
+// ─── Comments / Annotations ──────────────────────────────────────────────────
+
+export function useGetComments(projectId: bigint | null) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Comment[]>({
+    queryKey: ['comments', projectId?.toString()],
+    queryFn: async () => {
+      if (!actor || projectId === null) return [];
+      return actor.getComments(projectId);
+    },
+    enabled: !!actor && !actorFetching && projectId !== null,
+  });
+}
+
+export function useAddComment() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      projectId: bigint;
+      elementId: string;
+      position: { x: number; y: number; z: number };
+      text: string;
+    }): Promise<Comment> => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.addComment(params.projectId, params.elementId, params.position, params.text);
+    },
+    onSuccess: (_data, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', projectId.toString()] });
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ commentId }: { commentId: bigint; projectId: bigint }): Promise<void> => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.deleteComment(commentId);
+    },
+    onSuccess: (_data, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', projectId.toString()] });
+    },
   });
 }

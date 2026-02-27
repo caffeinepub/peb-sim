@@ -1,145 +1,77 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T06:49:22.553Z",
-  "summary": "The diff implements the majority of the 13 requirements. Most frontend components are present and the backend is extended. However, several specific acceptance criteria have gaps, and some omitted files prevent full verification.",
+  "generatedAt": "2026-02-27T07:47:33.014Z",
+  "summary": "The diff implements most of the 8 requirements substantially. REQ-1 through REQ-8 are all present, but there are notable gaps: the GA drawings export produces an HTML file rather than a PDF (violating the PDF requirement), the token generation algorithm is deterministic/sequential rather than random, and the Ridge Connection detail modal is missing (only Base Plate and Haunch are implemented). Overall coverage is high but with specific acceptance criteria gaps.",
   "missing_requirements": [
     {
-      "requirement": "REQ-7: brandingSettings must include ralColors for roof/wall/trim/structure. The backend BrandingSettings type only stores primaryColorRal and secondaryColorRal (two fields), not the four separate RAL color fields specified in the AC.",
-      "reason": "backend/main.mo and backend/migration.mo define BrandingSettings with only signageText, primaryColorRal, secondaryColorRal — missing separate roof/wall/trim/structure RAL color persistence.",
+      "id": "REQ-1",
+      "requirement": "GA Drawings must be packaged into a downloadable PDF file titled 'General Arrangement (GA) Drawings'",
+      "reason": "The svgToPdf.ts utility generates and downloads an HTML file (.html extension, text/html blob) rather than a PDF. The acceptance criterion explicitly requires a PDF download. No jsPDF or equivalent PDF library is used.",
       "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo"
+        "frontend/src/utils/svgToPdf.ts"
       ]
     },
     {
-      "requirement": "REQ-9: Selected RAL colors for all four pickers (Roof, Wall, Trims, Structure) must be persisted to the backend project record.",
-      "reason": "The backend BrandingSettings only has two RAL fields (primaryColorRal, secondaryColorRal) rather than four. Full four-field RAL persistence to backend is not implemented.",
+      "id": "REQ-2",
+      "requirement": "Clicking a hotspot must open a modal with the corresponding connection detail for Ridge Connection type",
+      "reason": "ConnectionDetailModal.tsx only defines BasePlateDetail and HaunchDetail SVG components. There is no RidgeDetail component or handling for the 'ridge' ConnectionType, meaning clicking the Ridge hotspot would show no meaningful detail view.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/components/BrandingControls.tsx",
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "requirement": "WalkthroughController.tsx component with PointerLockControls, WASD movement, mouse-look, and basic collision detection.",
-      "reason": "WalkthroughController.tsx is imported in BuildingSimulator.tsx but is listed among omitted files — its actual implementation cannot be verified from the diff.",
-      "evidence": [
-        "frontend/src/components/BuildingSimulator.tsx"
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "requirement": "useVideoExport hook implementing MediaRecorder API with high bitrate VP9/VP8 codec.",
-      "reason": "VideoExportButton.tsx imports useVideoExport from '@/hooks/useVideoExport' but this hook file is not present in the diff content (listed among omitted files). The MediaRecorder implementation cannot be verified.",
-      "evidence": [
-        "frontend/src/components/VideoExportButton.tsx"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "calculateBuildingStats.ts utility module computing steel weight, sheeting area, and load simulation.",
-      "reason": "EngineeringPanel.tsx and EngineeringInputsForm.tsx import from '@/utils/calculateBuildingStats' and '@/utils/generateBOQ', but these utility files are among the omitted files in the diff and cannot be verified as implemented.",
-      "evidence": [
-        "frontend/src/components/EngineeringPanel.tsx",
-        "frontend/src/components/EngineeringInputsForm.tsx"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "Visible clouds in the sky background.",
-      "reason": "EnvironmentScene.tsx uses the drei Sky component but there is no cloud rendering. The AC explicitly requires visible clouds.",
-      "evidence": [
-        "frontend/src/components/EnvironmentScene.tsx"
+        "frontend/src/components/ConnectionDetailModal.tsx",
+        "frontend/src/components/ConnectionHotspots.tsx"
       ]
     },
     {
       "id": "REQ-3",
-      "requirement": "Rolling Shutters and Personnel Doors that snap to wall grid positions on placement.",
-      "reason": "DoorsAndShutters.tsx renders doors/shutters at fixed default placements hardcoded in BuildingSimulator.tsx. There is no interactive snapping placement mechanism for users to place doors at wall grid intersections.",
+      "requirement": "The shared link token must be a unique random alphanumeric token (e.g., 8-char alphanumeric)",
+      "reason": "The generateToken() function in backend/main.mo uses a deterministic sequential loop (char = charsArray[i % chars.size()]) which produces the same fixed string every time rather than a random token, so tokens are not unique across calls.",
       "evidence": [
-        "frontend/src/components/DoorsAndShutters.tsx",
-        "frontend/src/components/BuildingSimulator.tsx"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "requirement": "Optionally render BOQ data as a printable HTML page for PDF export via browser print.",
-      "reason": "EngineeringPanel.tsx only has a CSV download button. No printable HTML page or print-to-PDF feature is visible in the diff.",
-      "evidence": [
-        "frontend/src/components/EngineeringPanel.tsx"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "requirement": "RAL color list must include at least 20 common RAL codes.",
-      "reason": "frontend/src/data/ralColors.ts is imported but not present in the diff content (omitted). The 20+ RAL codes requirement cannot be confirmed.",
-      "evidence": [
-        "frontend/src/components/RALColorPicker.tsx"
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "requirement": "Shadows visible on interior floor and light patches when skylights are enabled.",
-      "reason": "ShadowStudy.tsx sets up shadow casting but there is no explicit interior floor mesh with receiveShadow, and the skylight patch effect on the interior floor is not implemented.",
-      "evidence": [
-        "frontend/src/components/ShadowStudy.tsx",
-        "frontend/src/components/CladdingSystem.tsx"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Font file for Text3D must be available as a static asset.",
-      "reason": "BuildingSignage.tsx references '/fonts/helvetiker_bold.typeface.json' but no font asset addition is visible in the diff. If the font file is missing, the component will fail to render.",
-      "evidence": [
-        "frontend/src/components/BuildingSignage.tsx"
+        "backend/main.mo"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "A separate backend/migration.mo module was created with a run() migration function.",
-      "reason": "The build request constraint states all backend logic must remain in the single Motoko actor in backend/main.mo. A separate migration module file was not requested.",
+      "description": "The GA drawings export downloads an HTML file instead of a PDF",
+      "reason": "svgToPdf.ts creates a Blob of type text/html and downloads it with a .html extension. The build request mandates a PDF output using a client-side SVG-to-PDF approach such as jsPDF.",
       "evidence": [
-        "backend/migration.mo"
+        "frontend/src/utils/svgToPdf.ts"
+      ]
+    },
+    {
+      "description": "STAAD.Pro export includes additional sections beyond what was requested: DEFINE MATERIAL, MEMBER PROPERTY AMERICAN, CONSTANTS, SUPPORTS, LOAD, and PERFORM ANALYSIS sections",
+      "reason": "The build request only specifies JOINT COORDINATES and MEMBER INCIDENCES sections as required content. The extra sections exceed the spec.",
+      "evidence": [
+        "frontend/src/utils/staadExporter.ts"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.82,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AccessoryControls.tsx",
-    "frontend/src/components/BrandingControls.tsx",
-    "frontend/src/components/BuildingSignage.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/components/AdvancedExportButtons.tsx",
+    "frontend/src/components/AnnotationMarkers.tsx",
     "frontend/src/components/BuildingSimulator.tsx",
-    "frontend/src/components/CladdingControls.tsx",
-    "frontend/src/components/CladdingSystem.tsx",
-    "frontend/src/components/ClearanceCheckBox.tsx",
-    "frontend/src/components/ClearanceCheckControls.tsx",
-    "frontend/src/components/DoorsAndShutters.tsx",
-    "frontend/src/components/EngineeringInputsForm.tsx",
-    "frontend/src/components/EngineeringPanel.tsx",
-    "frontend/src/components/EnvironmentControls.tsx",
-    "frontend/src/components/EnvironmentScene.tsx",
-    "frontend/src/components/GuttersAndDownspouts.tsx",
-    "frontend/src/components/RALColorPicker.tsx",
-    "frontend/src/components/SecondaryMembers.tsx",
-    "frontend/src/components/ShadowStudy.tsx",
-    "frontend/src/components/ShadowStudyControls.tsx",
-    "frontend/src/components/TurboVentilator.tsx",
-    "frontend/src/components/VideoExportButton.tsx",
-    "frontend/src/components/ViewModeToggle.tsx",
-    "frontend/src/components/WalkthroughController.tsx",
-    "frontend/src/components/XBracing.tsx",
-    "frontend/src/data/ralColors.ts",
+    "frontend/src/components/CommentInputPopover.tsx",
+    "frontend/src/components/CommentSidebar.tsx",
+    "frontend/src/components/ConnectionDetailModal.tsx",
+    "frontend/src/components/ConnectionHotspots.tsx",
+    "frontend/src/components/FoundationGeometry.tsx",
+    "frontend/src/components/GADrawingsExportButton.tsx",
+    "frontend/src/components/RateCardPanel.tsx",
+    "frontend/src/components/ShareButton.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/hooks/useVideoExport.ts",
+    "frontend/src/pages/Dashboard.tsx",
     "frontend/src/pages/ProjectViewer.tsx",
-    "frontend/src/utils/calculateBuildingStats.ts",
-    "frontend/src/utils/generateBOQ.ts",
+    "frontend/src/pages/ShareView.tsx",
+    "frontend/src/utils/calculateProjectCost.ts",
+    "frontend/src/utils/gaDrawingGenerator.ts",
+    "frontend/src/utils/ifcExporter.ts",
+    "frontend/src/utils/staadExporter.ts",
+    "frontend/src/utils/svgToPdf.ts",
     "project_state.json"
   ]
 }

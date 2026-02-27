@@ -1,274 +1,174 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T06:49:22.558Z",
+  "generatedAt": "2026-02-27T07:47:33.018Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 13,
-    "implemented": 12,
+    "total": 8,
+    "implemented": 6,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Implement a sheeting and cladding system in the 3D scene: add toggle-controlled roof and wall cladding meshes with two profile texture types ('Trapezoidal' and 'Standing Seam') rendered via texture mapping on the exterior surfaces. Include a Skylight/Polycarbonate transparency mode that sets cladding material opacity to ~0.3 with a distinct tinted color when enabled.",
+        "summary": "Implement a 2D GA Drawing Generator that takes the current 3D building model state (dimensions, bay spacing, roof pitch, purlin/girt positions, bracing layout, anchor bolt locations) and renders four standardized 2D SVG views: (1) Anchor Bolt Plan showing pedestal locations and column reactions, (2) Cross Section showing clear height and width with member labels, (3) Roof Plan showing purlin spacing and bracing locations, (4) Side Elevation showing bay spacing and wall bracing. Package all four views into a downloadable PDF file titled 'General Arrangement (GA) Drawings'. Use a client-side SVG-to-PDF approach (e.g., jsPDF + SVG rendering) since server-side Python/matplotlib is unavailable. Add a 'Download GA Drawings' button in the engineering panel or export section of the ProjectViewer.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/CladdingSystem.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/CladdingControls.tsx",
+          "frontend/src/utils/gaDrawingGenerator.ts",
+          "frontend/src/utils/svgToPdf.ts",
+          "frontend/src/components/GADrawingsExportButton.tsx",
           "frontend/src/pages/ProjectViewer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/CladdingSystem.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/CladdingControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-10",
-        "summary": "Create a `WalkthroughController.tsx` component implementing a first-person walkthrough mode inside the building using `PointerLockControls` from `@react-three/drei`. Implement WASD keyboard movement and mouse-look. Add basic collision detection to prevent the camera from passing through wall and column meshes. Add a toggle button in the UI to switch between Orbit View (exterior, using OrbitControls) and Interior View (first-person inside the building looking up at the rafters).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/WalkthroughController.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/ViewModeToggle.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/WalkthroughController.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/ViewModeToggle.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Implement a client-side video export feature using the MediaRecorder API. Add an 'Export Video' button that starts recording the Three.js canvas at high bitrate (target 8–15 Mbps) while playing through the erection sequence animation from step 0 to the final step. When the animation completes, stop the recording and trigger a browser download of the resulting WebM file.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useVideoExport.ts",
-          "frontend/src/components/VideoExportButton.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useVideoExport.ts",
-          "frontend/src/components/VideoExportButton.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-12",
-        "summary": "Add a 'Shadow Study' feature: a 'Time of Day' slider (range 6:00–20:00) that dynamically repositions a `DirectionalLight` in the 3D scene to simulate sun angle at the selected time, casting real-time shadows through the building. Shadows should be visible on the ground plane and interior surfaces, enabling skylight planning. Enable `castShadow` and `receiveShadow` on all relevant meshes.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/ShadowStudy.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/ShadowStudyControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/ShadowStudy.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/ShadowStudyControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-13",
-        "summary": "Add a 'Clearance Check' tool: render a draggable 3D box inside the building representing a standard vehicle (use Truck preset: ~6m L × 2.5m W × 3.5m H, and Forklift preset: ~3m L × 1.5m W × 2.2m H). Allow the user to drag it along the floor plane using pointer events. Highlight the box red if it intersects with any structural member (column, knee-brace) and green when clearance is confirmed.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/ClearanceCheckBox.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/ClearanceCheckControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/ClearanceCheckBox.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/ClearanceCheckControls.tsx",
+          "frontend/src/utils/gaDrawingGenerator.ts",
+          "frontend/src/utils/svgToPdf.ts",
+          "frontend/src/components/GADrawingsExportButton.tsx",
           "frontend/src/pages/ProjectViewer.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Auto-generate Z-Purlin and C-Girt secondary structural members along roof and wall grid lines respectively using Three.js InstancedMesh for performance. Spacing should be derived from the building bay spacing parameters already stored in the project.",
+        "summary": "Implement LOD 350 high-fidelity connection detail hotspots on the 3D model. Place clickable sphere 'node' markers at key structural joints: Rafter-to-Column Haunch (both ends of each rafter), Ridge Connection (apex), and Base Plate (bottom of each column). When a node is clicked, open a modal dialog showing a high-resolution Three.js or SVG detail view of that connection type. Base Plate detail must show: anchor bolt layout (4-bolt pattern), stiffener plates, and a grout gap between plate and concrete. Haunch detail must show: flange plates, bolt rows (2×4 grid), and web stiffeners. Also render Concrete Pedestals (grey box geometry) and Foundation Blocks (larger grey box below grade, partially clipped) beneath each column base in the main 3D scene to visualize the steel-to-civil interface.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/SecondaryMembers.tsx",
+          "frontend/src/components/ConnectionHotspots.tsx",
+          "frontend/src/components/ConnectionDetailModal.tsx",
+          "frontend/src/components/FoundationGeometry.tsx",
           "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/CladdingControls.tsx"
+          "frontend/src/pages/ProjectViewer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/SecondaryMembers.tsx",
+          "frontend/src/components/ConnectionHotspots.tsx",
+          "frontend/src/components/ConnectionDetailModal.tsx",
+          "frontend/src/components/FoundationGeometry.tsx",
           "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/CladdingControls.tsx"
+          "frontend/src/pages/ProjectViewer.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Add the following parametric 3D accessory components to the building scene, each controllable via a toggle panel: (a) Turbo Ventilators on the ridge with a continuous spinning animation; (b) Rainwater Gutters and Downspouts along the eave lines; (c) Rolling Shutters and Personnel Doors that snap to wall grid positions on placement; (d) X-Bracing rods on wall bays and roof panels.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/TurboVentilator.tsx",
-          "frontend/src/components/GuttersAndDownspouts.tsx",
-          "frontend/src/components/DoorsAndShutters.tsx",
-          "frontend/src/components/XBracing.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/AccessoryControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/TurboVentilator.tsx",
-          "frontend/src/components/GuttersAndDownspouts.tsx",
-          "frontend/src/components/DoorsAndShutters.tsx",
-          "frontend/src/components/XBracing.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/AccessoryControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Add an environment to the 3D scene: a skybox using a gradient or procedural sky (using @react-three/drei Sky or a CubeCamera approach) with visible clouds, and a ground plane beneath the building with switchable texture options: Concrete, Asphalt, and Grass.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/Environment.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/EnvironmentControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/EnvironmentControls.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Create a client-side utility module `frontend/src/utils/calculateBuildingStats.ts` that computes: (a) Steel weight estimate = total volume of all column and rafter members × 7850 kg/m³; (b) Sheeting area = total roof surface area + total wall surface area minus door/shutter opening areas; (c) Load simulation: accepts Wind Speed (km/h), Seismic Zone (I–V), and Live Load (kN/m²) inputs and returns a 'Design Status' of 'Safe' or 'Requires Validation' using simplified IS 800 / MBMA heuristics.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/calculateBuildingStats.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/calculateBuildingStats.ts"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Add an Engineering / BOQ panel in the UI that displays the calculated stats from `calculateBuildingStats.ts` and provides a 'Download BOQ' button. The download must export a CSV file listing all structural and cladding parts with quantities, dimensions, and estimated weights. Optionally render the same data as a printable HTML page for PDF export via browser print.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/EngineeringPanel.tsx",
-          "frontend/src/utils/generateBOQ.ts",
-          "frontend/src/components/EngineeringInputsForm.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/EngineeringPanel.tsx",
-          "frontend/src/utils/generateBOQ.ts",
-          "frontend/src/components/EngineeringInputsForm.tsx",
-          "frontend/src/pages/ProjectViewer.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Persist engineering calculator inputs (Wind Speed, Seismic Zone, Live Load) and branding settings (signage text, RAL color selections) as part of the project data in the Motoko backend. Extend the project data structure in `backend/main.mo` to store a `brandingSettings` and `engineeringInputs` record on each project, with corresponding update and query methods.",
+        "summary": "Implement a backend data model for SharedLinks. Each SharedLink record must store: a unique hashed token (e.g., 8-char alphanumeric), the source projectId, the ownerPrincipal, and a createdAt timestamp. Add backend endpoints: createSharedLink(projectId) → returns the token, getProjectByShareToken(token) → returns project data in read-only form (no mutation access). Store SharedLinks in stable backend state.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-8",
-        "summary": "Create a `BuildingSignage` React Three Fiber component that renders extruded 3D text geometry on the front fascia of the building. Accept a text string input (e.g., 'Factory A') from a UI text field. Use `@react-three/drei`'s `Text3D` or Three.js `ExtrudeGeometry` with a font. Mount the signage centered on the front gable face.",
+        "id": "REQ-4",
+        "summary": "Implement a backend data model for Comments (3D Annotations). Each Comment record must store: a unique ID, the projectId it belongs to, the author principal, the target element identifier (e.g., 'column-2'), the 3D world-space position (x, y, z floats), the comment text, and a createdAt timestamp. Add backend endpoints: addComment(projectId, elementId, position, text) → returns the created Comment, getComments(projectId) → returns all comments for a project, deleteComment(commentId) → removes a comment (owner or project-owner only).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Implement the frontend Public Share view. Add a React route at /share/:token that loads the project via getProjectByShareToken. This view renders the full BuildingSimulator in read-only mode: all editing controls (side-panel inputs, branding controls, engineering inputs, etc.) are hidden or disabled. Show a 'View Only' badge in the header. Add a 'Share' button in the ProjectViewer (authenticated view) that calls createSharedLink and displays the generated share URL in a copyable dialog.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/BuildingSignage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/ShareView.tsx",
+          "frontend/src/components/ShareButton.tsx",
+          "frontend/src/pages/ProjectViewer.tsx",
+          "frontend/src/App.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/ShareView.tsx",
+          "frontend/src/components/ShareButton.tsx",
+          "frontend/src/pages/ProjectViewer.tsx",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Implement the 3D Annotation (Sticky Note) UI in ProjectViewer. When the authenticated user double-clicks on a structural element (column, rafter, etc.) in the 3D scene, show a small input popover anchored near the click point to type a comment, then submit it via addComment. Render all existing comments for the project as floating 3D billboard markers (e.g., a yellow sticky-note icon + author initial) positioned at their stored world-space coordinates. Add a collapsible CommentSidebar panel listing all annotations with element reference, author, text, and a delete button (for own comments). The share/read-only view shows markers and sidebar in read-only mode (no add/delete).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/AnnotationMarkers.tsx",
+          "frontend/src/components/CommentInputPopover.tsx",
+          "frontend/src/components/CommentSidebar.tsx",
           "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/BrandingControls.tsx",
+          "frontend/src/pages/ProjectViewer.tsx",
+          "frontend/src/pages/ShareView.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/AnnotationMarkers.tsx",
+          "frontend/src/components/CommentInputPopover.tsx",
+          "frontend/src/components/CommentSidebar.tsx",
+          "frontend/src/components/BuildingSimulator.tsx",
+          "frontend/src/pages/ProjectViewer.tsx",
+          "frontend/src/pages/ShareView.tsx"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Implement the Commercial Costing Engine. Add a 'Rate Card' settings panel (accessible via a tab or modal in ProjectViewer) with four numeric inputs: Primary Steel ($/MT), Secondary Steel ($/MT), Sheeting ($/sqm), and Erection Labor ($/sqm). Persist these rates in local component state (no backend persistence required). Add a `calculateProjectCost` utility function that multiplies each rate against the corresponding calculated quantities from `calculateBuildingStats` (primary steel weight in MT, secondary steel weight in MT, total sheeting area in sqm, floor area in sqm for labor). Display the computed 'Total Project Cost' as a formatted currency value in the engineering sidebar panel, updating reactively whenever building dimensions or rate card values change.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/calculateProjectCost.ts",
+          "frontend/src/components/RateCardPanel.tsx",
+          "frontend/src/components/EngineeringPanel.tsx",
           "frontend/src/pages/ProjectViewer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/BuildingSignage.tsx",
-          "frontend/src/components/BuildingSimulator.tsx",
-          "frontend/src/components/BrandingControls.tsx",
+          "frontend/src/utils/calculateProjectCost.ts",
+          "frontend/src/components/RateCardPanel.tsx",
           "frontend/src/pages/ProjectViewer.tsx"
         ]
       },
       {
-        "id": "REQ-9",
-        "summary": "Add a RAL Color Picker panel in the UI with four independent color pickers for: Roof Cladding, Wall Cladding, Trims, and Structural Members. Provide a curated list of at least 20 common RAL codes with their hex equivalents as selectable swatches. Applying a color updates the corresponding 3D materials in the scene immediately.",
+        "id": "REQ-8",
+        "summary": "Implement Advanced Export options for STAAD.Pro (.std) and IFC (BIM) formats. Add an 'Export' section in ProjectViewer (e.g., in the engineering panel or a dedicated Export tab) with two buttons: 'Export STAAD.Pro (.std)' and 'Export IFC (.ifc)'. The STAAD.Pro export generates a plain-text .std file encoding the center-line node coordinates and member connectivity (JOINT COORDINATES and MEMBER INCIDENCES sections) from the current building geometry. The IFC export generates a minimal IFC 2x3 text file encoding IfcColumn and IfcBeam entities with their center-line geometry. Both exports trigger a browser file download.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/RALColorPicker.tsx",
-          "frontend/src/data/ralColors.ts",
-          "frontend/src/components/BrandingControls.tsx",
-          "frontend/src/components/BuildingSimulator.tsx"
+          "frontend/src/utils/staadExporter.ts",
+          "frontend/src/utils/ifcExporter.ts",
+          "frontend/src/components/AdvancedExportButtons.tsx",
+          "frontend/src/pages/ProjectViewer.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/RALColorPicker.tsx",
-          "frontend/src/data/ralColors.ts",
-          "frontend/src/components/BrandingControls.tsx",
-          "frontend/src/components/BuildingSimulator.tsx"
+          "frontend/src/utils/staadExporter.ts",
+          "frontend/src/utils/ifcExporter.ts",
+          "frontend/src/components/AdvancedExportButtons.tsx",
+          "frontend/src/pages/ProjectViewer.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/blob-storage/Mixin.mo",
-    "backend/blob-storage/Storage.mo",
     "backend/main.mo",
     "backend/migration.mo",
     "build-request.json",
-    "build-template/README.md",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/public/assets/generated/cladding-standing-seam.dim_512x512.png",
-    "frontend/public/assets/generated/cladding-trapezoidal.dim_512x512.png",
-    "frontend/public/assets/generated/ground-asphalt.dim_512x512.png",
-    "frontend/public/assets/generated/ground-concrete.dim_512x512.png",
-    "frontend/public/assets/generated/ground-grass.dim_512x512.png",
+    "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/AccessoryControls.tsx",
-    "frontend/src/components/BrandingControls.tsx",
-    "frontend/src/components/BuildingSignage.tsx",
+    "frontend/src/components/AdvancedExportButtons.tsx",
+    "frontend/src/components/AnnotationMarkers.tsx",
     "frontend/src/components/BuildingSimulator.tsx",
-    "frontend/src/components/CladdingControls.tsx",
-    "frontend/src/components/CladdingSystem.tsx",
-    "frontend/src/components/ClearanceCheckBox.tsx",
-    "frontend/src/components/ClearanceCheckControls.tsx",
-    "frontend/src/components/DoorsAndShutters.tsx",
-    "frontend/src/components/EngineeringInputsForm.tsx",
-    "frontend/src/components/EngineeringPanel.tsx",
-    "frontend/src/components/EnvironmentControls.tsx",
-    "frontend/src/components/EnvironmentScene.tsx",
-    "frontend/src/components/GuttersAndDownspouts.tsx",
-    "frontend/src/components/RALColorPicker.tsx",
-    "frontend/src/components/SecondaryMembers.tsx",
-    "frontend/src/components/ShadowStudy.tsx",
-    "frontend/src/components/ShadowStudyControls.tsx",
-    "frontend/src/components/TurboVentilator.tsx",
-    "frontend/src/components/VideoExportButton.tsx",
-    "frontend/src/components/ViewModeToggle.tsx",
-    "frontend/src/components/WalkthroughController.tsx",
-    "frontend/src/components/XBracing.tsx",
-    "frontend/src/data/ralColors.ts",
+    "frontend/src/components/CommentInputPopover.tsx",
+    "frontend/src/components/CommentSidebar.tsx",
+    "frontend/src/components/ConnectionDetailModal.tsx",
+    "frontend/src/components/ConnectionHotspots.tsx",
+    "frontend/src/components/FoundationGeometry.tsx",
+    "frontend/src/components/GADrawingsExportButton.tsx",
+    "frontend/src/components/RateCardPanel.tsx",
+    "frontend/src/components/ShareButton.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/hooks/useVideoExport.ts",
+    "frontend/src/pages/Dashboard.tsx",
     "frontend/src/pages/ProjectViewer.tsx",
-    "frontend/src/utils/calculateBuildingStats.ts",
-    "frontend/src/utils/generateBOQ.ts",
+    "frontend/src/pages/ShareView.tsx",
+    "frontend/src/utils/calculateProjectCost.ts",
+    "frontend/src/utils/gaDrawingGenerator.ts",
+    "frontend/src/utils/ifcExporter.ts",
+    "frontend/src/utils/staadExporter.ts",
+    "frontend/src/utils/svgToPdf.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,387 +1,233 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Phase 2: Advanced Visualization, Engineering Logic & Media Export",
+  "title": "Phase 3: Auto-Drafting, Collaboration & Commercial Logic",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Implement sheeting and cladding system with texture mapping and skylight transparency mode",
+      "summary": "Implement a 2D GA Drawing Generator that renders four standardized SVG views (Anchor Bolt Plan, Cross Section, Roof Plan, Side Elevation) from the current 3D building model state and packages them into a downloadable PDF titled 'General Arrangement (GA) Drawings'.",
       "acceptanceCriteria": [
-        "Roof and wall surfaces display Trapezoidal or Standing Seam cladding textures based on selected toggle",
-        "Skylight mode renders cladding as semi-transparent polycarbonate material",
-        "Cladding toggles in the UI control visibility independently for roof and walls"
+        "Clicking 'Download GA Drawings' generates and downloads a PDF file",
+        "PDF contains all four views: Anchor Bolt Plan, Cross Section, Roof Plan, Side Elevation",
+        "Views are dimensionally accurate relative to the current building parameters",
+        "Anchor Bolt Plan shows pedestal/column positions with reaction labels",
+        "Cross Section shows clear height and width with member annotations",
+        "Roof Plan shows purlin spacing and X-bracing layout",
+        "Side Elevation shows bay spacing and wall bracing diagonals"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/CladdingSystem.tsx",
+          "path": "frontend/src/utils/gaDrawingGenerator.ts",
           "operation": "create",
-          "description": "Create a React Three Fiber component that renders roof and wall cladding meshes using texture mapping. Load the generated trapezoidal texture (frontend/public/assets/generated/cladding-trapezoidal.dim_512x512.png) and standing seam texture (frontend/public/assets/generated/cladding-standing-seam.dim_512x512.png) via useTexture from @react-three/drei. Support toggle-controlled profile selection ('Trapezoidal' or 'Standing Seam') and a Skylight/Polycarbonate mode that sets material opacity to 0.3 with a tinted blue-green color. Apply textures to roof and wall plane geometries using UV mapping. Accept props for roof/wall visibility, profile type, and skylight mode."
+          "description": "Create utility module that takes BuildingState and generates four SVG views: (1) Anchor Bolt Plan with column grid and pedestal locations, (2) Cross Section showing clear span/height with member labels, (3) Roof Plan with purlin spacing and bracing, (4) Side Elevation with bay spacing and wall bracing. Each function returns an SVG string with dimension annotations, title block, and scale notation."
         },
         {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Integrate the CladdingSystem component into the 3D scene. Add state for cladding visibility (roof/wall toggles), selected profile type ('Trapezoidal' or 'Standing Seam'), and skylight mode. Pass building geometry dimensions and toggle states as props to CladdingSystem. Ensure cladding renders on top of the structural frame without z-fighting."
+          "path": "frontend/src/utils/svgToPdf.ts",
+          "operation": "create",
+          "description": "Create client-side SVG-to-PDF conversion utility using jsPDF. Accepts an array of SVG strings and metadata, renders each SVG to a separate PDF page, and returns a Blob for download. Handle SVG-to-canvas conversion for jsPDF compatibility."
         },
         {
-          "path": "frontend/src/components/CladdingControls.tsx",
+          "path": "frontend/src/components/GADrawingsExportButton.tsx",
           "operation": "create",
-          "description": "Create a UI control panel component with three toggle switches: 'Roof Cladding', 'Wall Cladding', and 'Skylight Mode', plus a radio group or dropdown to select between 'Trapezoidal' and 'Standing Seam' profiles. Use shadcn/ui components (Switch, RadioGroup, Label). Emit state changes to the parent BuildingSimulator component. Style consistently with the existing industrial dark theme."
+          "description": "Create button component that triggers GA drawing generation and PDF download. On click, call gaDrawingGenerator functions with current building state, package all four SVGs using svgToPdf, and trigger browser download with filename 'General_Arrangement_Drawings.pdf'. Show loading spinner during generation and toast notification on completion or error."
         },
         {
           "path": "frontend/src/pages/ProjectViewer.tsx",
           "operation": "modify",
-          "description": "Wire the CladdingControls panel into the ProjectViewer page UI, positioning it alongside the existing TimelineControls. Ensure the controls are visible and accessible when viewing a project."
+          "description": "Add GADrawingsExportButton to the engineering panel or export section of the ProjectViewer, passing current buildingState as prop. Place it near the existing BOQ download button for consistency."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Auto-generate Z-Purlin and C-Girt secondary structural members using InstancedMesh",
+      "summary": "Implement LOD 350 high-fidelity connection detail hotspots on the 3D model with clickable nodes at key structural joints that open modal dialogs showing detailed connection views, and render Concrete Pedestals and Foundation Blocks beneath columns.",
       "acceptanceCriteria": [
-        "Z-Purlins appear across all roof bays at regular intervals using InstancedMesh",
-        "C-Girts appear across all wall bays at regular intervals using InstancedMesh",
-        "Toggle in UI shows/hides secondary members",
-        "No significant frame-rate drop when secondary members are visible"
+        "Hotspot spheres are visible at Haunch, Ridge, and Base Plate joints in the 3D scene",
+        "Clicking a hotspot opens a modal with the corresponding connection detail",
+        "Base Plate modal renders anchor bolt layout, stiffener plates, and grout gap",
+        "Haunch modal renders flange bolts and web stiffeners",
+        "Concrete Pedestal geometry is visible below each column in the main 3D view",
+        "Foundation Block geometry is visible below each pedestal, partially below ground level",
+        "Hotspot nodes are clearly distinguishable (e.g., glowing amber spheres) from structural members"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/SecondaryMembers.tsx",
+          "path": "frontend/src/components/ConnectionHotspots.tsx",
           "operation": "create",
-          "description": "Create a React Three Fiber component that generates Z-Purlins and C-Girts using InstancedMesh for high performance. Accept building dimensions and bay spacing parameters as props. Compute purlin positions along roof grid lines at regular intervals (derived from bay spacing). Compute girt positions along wall grid lines similarly. Use cylindrical or box geometry for each member type with appropriate cross-section dimensions. Render two separate InstancedMesh instances (one for purlins, one for girts). Support a visibility toggle prop."
+          "description": "Create Three.js React component that places clickable glowing amber sphere markers at key connection joints (Rafter-to-Column Haunch at both rafter ends, Ridge at apex, Base Plate at column bottoms). Use raycasting to detect clicks and emit an onHotspotClick event with connection type and position. Calculate hotspot positions from building geometry and member endpoints."
+        },
+        {
+          "path": "frontend/src/components/ConnectionDetailModal.tsx",
+          "operation": "create",
+          "description": "Create modal dialog component that displays high-resolution connection detail views. Accept connectionType prop ('haunch', 'ridge', 'basePlate') and render appropriate detail scene. For Base Plate: show 4-bolt anchor pattern, stiffener plates, and grout gap. For Haunch: show flange plates with 2×4 bolt grid and web stiffeners. Use Three.js FiberCanvas or detailed SVG rendering within the modal."
+        },
+        {
+          "path": "frontend/src/components/FoundationGeometry.tsx",
+          "operation": "create",
+          "description": "Create Three.js React component that renders Concrete Pedestals (grey box mesh below each column base) and Foundation Blocks (larger grey box partially clipped below grade). Calculate pedestal positions from column grid layout. Foundation blocks should extend below ground plane with appropriate clipping or transparency to show steel-to-civil interface."
         },
         {
           "path": "frontend/src/components/BuildingSimulator.tsx",
           "operation": "modify",
-          "description": "Integrate the SecondaryMembers component into the 3D scene. Add state for secondary members visibility toggle. Pass building parameters (bay spacing, dimensions) to SecondaryMembers. Ensure secondary members render behind cladding in the scene hierarchy."
-        },
-        {
-          "path": "frontend/src/components/CladdingControls.tsx",
-          "operation": "modify",
-          "description": "Add a 'Show Secondary Members' toggle switch to the cladding/structure controls panel. Wire the toggle to update the secondary members visibility state in BuildingSimulator."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Add parametric 3D accessory components (turbo ventilators, gutters, doors, X-bracing) to the scene",
-      "acceptanceCriteria": [
-        "Turbo ventilators appear on ridge and rotate continuously via useFrame animation",
-        "Gutters and downspouts are placed along all eave edges",
-        "Rolling shutters and personnel doors can be placed on wall grid intersections",
-        "X-bracing cross members are rendered in selected wall and/or roof bays",
-        "Each accessory type has an independent toggle in the UI"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/TurboVentilator.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that renders a parametric turbo ventilator using cylinder and cone geometries. Implement a continuous spinning animation using useFrame hook (rotate around Y-axis). Accept position prop for placement on the ridge line. Use metallic material to match building aesthetics."
-        },
-        {
-          "path": "frontend/src/components/GuttersAndDownspouts.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that renders rainwater gutters along eave lines and downspouts at regular intervals. Use extruded tube or box geometries for gutters and cylinders for downspouts. Accept building dimensions and eave positions as props. Use a dark metallic material."
-        },
-        {
-          "path": "frontend/src/components/DoorsAndShutters.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that renders rolling shutters and personnel doors. Accept a list of placement positions (snapped to wall grid intersections). Use box geometries with appropriate dimensions for each door type. Implement visual snap-to-grid feedback. Support adding/removing doors via a placement mode."
-        },
-        {
-          "path": "frontend/src/components/XBracing.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that renders X-bracing rods on selected wall and roof bays. Accept a list of bay indices where bracing should appear. Render crossed cylindrical rods using line or cylinder geometries. Use a contrasting steel color material."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Integrate all accessory components (TurboVentilator, GuttersAndDownspouts, DoorsAndShutters, XBracing) into the 3D scene. Add state for each accessory toggle and placement data (door positions, bracing bay selections). Pass building geometry data to each component. Ensure accessories render at appropriate z-order relative to structure and cladding."
-        },
-        {
-          "path": "frontend/src/components/AccessoryControls.tsx",
-          "operation": "create",
-          "description": "Create a UI control panel with toggle switches for Turbo Ventilators, Gutters/Downspouts, Doors/Shutters, and X-Bracing. Add door placement controls (button to enter placement mode, grid position selector). Add bracing bay selectors (checkboxes or multi-select for bay indices). Use shadcn/ui components and match the industrial theme. Emit state changes to BuildingSimulator."
+          "description": "Add ConnectionHotspots and FoundationGeometry components to the scene composition. Wire ConnectionHotspots onHotspotClick handler to open ConnectionDetailModal with the selected connection type. Pass building geometry and member data as props."
         },
         {
           "path": "frontend/src/pages/ProjectViewer.tsx",
           "operation": "modify",
-          "description": "Wire the AccessoryControls panel into the ProjectViewer page, positioning it in an accessible location alongside other controls. Ensure all accessory controls are reachable without obscuring the 3D viewport."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Add environment with skybox and ground plane with switchable textures",
-      "acceptanceCriteria": [
-        "Sky background with clouds is visible in the 3D scene",
-        "A ground plane is rendered under the building",
-        "UI control allows switching ground texture between Concrete, Asphalt, and Grass"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Environment.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that renders the scene environment. Use the Sky component from @react-three/drei to render a procedural sky with visible clouds (adjust sunPosition and turbidity props for cloud effect). Render a large ground plane mesh beneath the building using PlaneGeometry. Load the three generated ground textures (frontend/public/assets/generated/ground-concrete.dim_512x512.png, frontend/public/assets/generated/ground-asphalt.dim_512x512.png, frontend/public/assets/generated/ground-grass.dim_512x512.png) via useTexture. Accept a selectedGroundTexture prop ('Concrete', 'Asphalt', or 'Grass') and apply the corresponding texture to the ground plane material with appropriate repeat settings."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Integrate the Environment component into the 3D scene before other building components. Add state for selected ground texture type. Pass the ground texture selection to the Environment component. Ensure the ground plane is positioned below the building origin."
-        },
-        {
-          "path": "frontend/src/components/EnvironmentControls.tsx",
-          "operation": "create",
-          "description": "Create a UI control component with a radio group or dropdown to select the ground texture type (Concrete, Asphalt, Grass). Use shadcn/ui components (RadioGroup or Select). Emit the selected texture type to BuildingSimulator. Style consistently with other control panels."
-        },
-        {
-          "path": "frontend/src/pages/ProjectViewer.tsx",
-          "operation": "modify",
-          "description": "Wire the EnvironmentControls panel into the ProjectViewer UI, grouping it logically with other scene controls."
+          "description": "Add state management for ConnectionDetailModal visibility and selected connection type. Pass modal state handlers to BuildingSimulator and render ConnectionDetailModal at page level with appropriate z-index."
         }
       ]
     },
     {
       "id": "REQ-5",
-      "summary": "Create calculateBuildingStats utility for steel weight, sheeting area, and load simulation",
+      "summary": "Implement the frontend Public Share view that loads projects via share token in read-only mode, and add a Share button in ProjectViewer to generate and display copyable share URLs.",
       "acceptanceCriteria": [
-        "Steel weight is calculated correctly from member dimensions and density",
-        "Sheeting area subtracts door/opening areas from total surface",
-        "Load simulation returns 'Safe' or 'Requires Validation' based on provided inputs",
-        "Function is importable and used in the Engineering panel UI"
+        "Navigating to /share/:token renders the 3D building model",
+        "No editing controls are visible or accessible in the share view",
+        "A 'View Only' badge is shown in the header",
+        "The 'Share' button in ProjectViewer generates and displays a copyable share URL",
+        "Invalid tokens show an appropriate error message"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/calculateBuildingStats.ts",
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add useGetProjectByShareToken(token: string) query hook that calls backend getProjectByShareToken. Return project data or null for invalid tokens. Configure query with appropriate retry and error handling."
+        },
+        {
+          "path": "frontend/src/pages/ShareView.tsx",
           "operation": "create",
-          "description": "Create a utility module that exports calculateBuildingStats function. Accept building data including all structural member dimensions (columns, rafters), total roof surface area, total wall surface area, door/shutter opening areas, wind speed (km/h), seismic zone (I–V), and live load (kN/m²). Compute steel weight estimate as: sum of (volume of each member × 7850 kg/m³). Compute sheeting area as: (roof surface area + wall surface area) - door/opening areas. Implement load simulation using simplified IS 800 / MBMA heuristics: if wind speed > 150 km/h OR seismic zone >= IV OR live load > 2.0 kN/m², return 'Requires Validation'; otherwise return 'Safe'. Return an object with steelWeight (kg), sheetingArea (m²), and designStatus ('Safe' | 'Requires Validation'). Include TypeScript types for inputs and outputs."
+          "description": "Create public share view page component at route /share/:token. Extract token from URL params, call useGetProjectByShareToken, and render BuildingSimulator in read-only mode if project is found. Hide all editing controls (side-panel inputs, branding controls, engineering inputs, etc.). Display 'View Only' badge in header. Show error message with return-to-login button for invalid tokens."
+        },
+        {
+          "path": "frontend/src/components/ShareButton.tsx",
+          "operation": "create",
+          "description": "Create Share button component that calls createSharedLink mutation with current projectId. On success, display a dialog with the generated share URL (constructed as window.location.origin + '/share/' + token) in a copyable input field with copy-to-clipboard button. Show loading state during link generation and toast notification on copy."
+        },
+        {
+          "path": "frontend/src/pages/ProjectViewer.tsx",
+          "operation": "modify",
+          "description": "Add ShareButton component to the ProjectViewer toolbar or header area, passing current project.id as prop. Position it prominently for easy access by authenticated users."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register /share/:token route in TanStack Router configuration that renders the ShareView component. Ensure route is publicly accessible (no authentication guard)."
         }
       ]
     },
     {
       "id": "REQ-6",
-      "summary": "Add Engineering/BOQ panel with calculated stats and CSV download functionality",
+      "summary": "Implement the 3D Annotation (Sticky Note) UI in ProjectViewer with double-click comment input, floating 3D billboard markers, and a collapsible CommentSidebar for managing annotations.",
       "acceptanceCriteria": [
-        "Engineering panel displays steel weight, sheeting area, and design status",
-        "Download BOQ button triggers a CSV file download in the browser",
-        "CSV includes columns: Part Name, Quantity, Dimensions, Unit Weight, Total Weight",
-        "Design status badge is visually distinct: green for Safe, amber/red for Requires Validation"
+        "Double-clicking a structural element opens a comment input popover",
+        "Submitting the popover creates a sticky-note marker at the clicked position in 3D space",
+        "All comments for the project are loaded and rendered as 3D billboard markers on mount",
+        "CommentSidebar lists all annotations with element name, author, and text",
+        "Users can delete their own comments from the sidebar",
+        "Share view shows markers and sidebar without add/delete controls"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/EngineeringPanel.tsx",
-          "operation": "create",
-          "description": "Create a UI panel component that displays engineering statistics and BOQ download. Accept building data and engineering inputs (wind speed, seismic zone, live load) as props. Call calculateBuildingStats utility to compute stats. Display steel weight (kg), sheeting area (m²), and design status with a color-coded badge (green for Safe, amber/red for Requires Validation). Include a 'Download BOQ' button that generates a CSV file listing all structural members (columns, rafters, purlins, girts) and cladding parts with columns: Part Name, Quantity, Dimensions, Unit Weight (kg), Total Weight (kg). Use the browser download API to trigger CSV file download with filename 'BOQ_ProjectName_Date.csv'. Use shadcn/ui components (Card, Badge, Button) and match the industrial theme."
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add useAddComment, useGetComments, and useDeleteComment mutation/query hooks that call backend addComment, getComments, and deleteComment endpoints. Configure appropriate cache invalidation on mutations."
         },
         {
-          "path": "frontend/src/utils/generateBOQ.ts",
+          "path": "frontend/src/components/AnnotationMarkers.tsx",
           "operation": "create",
-          "description": "Create a utility function that accepts building data (structural members, cladding areas, quantities) and returns a CSV string. For each part type (columns, rafters, purlins, girts, roof cladding, wall cladding), compute quantity, dimensions string, unit weight, and total weight. Format as CSV with header row and data rows. Include totals row at the end. Export a function generateBOQCSV that returns the CSV string."
+          "description": "Create Three.js React component that renders 3D billboard sprite markers for each comment. Use yellow sticky-note icon texture with author initial overlay. Position markers at stored world-space coordinates from comment data. Make markers clickable to highlight corresponding comment in sidebar."
         },
         {
-          "path": "frontend/src/components/EngineeringInputsForm.tsx",
+          "path": "frontend/src/components/CommentInputPopover.tsx",
           "operation": "create",
-          "description": "Create a form component for entering engineering calculator inputs: Wind Speed (km/h) as a number input, Seismic Zone (I–V) as a select dropdown, and Live Load (kN/m²) as a number input. Use shadcn/ui form components (Input, Select, Label). Emit input values to the parent component (ProjectViewer or BuildingSimulator). Style consistently with other panels."
+          "description": "Create popover component anchored near the clicked 3D position (projected to screen space) with a text input field and submit/cancel buttons. On submit, call addComment mutation with projectId, elementId, position, and text. Show loading state during submission and close popover on success."
+        },
+        {
+          "path": "frontend/src/components/CommentSidebar.tsx",
+          "operation": "create",
+          "description": "Create collapsible sidebar panel that lists all comments for the current project. Display element reference, author display name, comment text, and timestamp for each annotation. Add delete button (visible only for own comments, checked via identity comparison). Include expand/collapse toggle. In read-only mode (share view), hide delete buttons and add controls."
+        },
+        {
+          "path": "frontend/src/components/BuildingSimulator.tsx",
+          "operation": "modify",
+          "description": "Add double-click raycasting handler to structural element meshes that captures elementId and 3D world position, then triggers CommentInputPopover. Add AnnotationMarkers component to scene, passing comments array from useGetComments. Pass readOnly prop to control interactivity."
         },
         {
           "path": "frontend/src/pages/ProjectViewer.tsx",
           "operation": "modify",
-          "description": "Wire the EngineeringPanel and EngineeringInputsForm into the ProjectViewer page. Add state for engineering inputs (wind speed, seismic zone, live load) with default values. Position the engineering controls in a collapsible sidebar or tab panel. Pass building data and input values to EngineeringPanel. Fetch and pass stored engineering inputs from the backend project record if available."
+          "description": "Add CommentSidebar to the page layout. Fetch comments using useGetComments hook and pass to both CommentSidebar and BuildingSimulator. Manage CommentInputPopover state (visibility, position, elementId) and pass handlers to BuildingSimulator."
+        },
+        {
+          "path": "frontend/src/pages/ShareView.tsx",
+          "operation": "modify",
+          "description": "Include CommentSidebar and AnnotationMarkers in share view, but pass readOnly={true} prop to disable add/delete functionality. Display markers and sidebar content in view-only mode."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Implement the Commercial Costing Engine with a Rate Card settings panel and real-time Total Project Cost calculation based on building quantities and user-defined rates.",
+      "acceptanceCriteria": [
+        "Rate Card panel shows four editable numeric fields with appropriate labels and units",
+        "Changing any rate value immediately recalculates and updates the Total Project Cost display",
+        "Changing building dimensions (span, length, height) recalculates cost in real-time",
+        "Total Project Cost is displayed in the engineering/sidebar panel in formatted currency (e.g., $1,234,500)",
+        "Cost calculation uses quantities from calculateBuildingStats (weights and areas)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/calculateProjectCost.ts",
+          "operation": "create",
+          "description": "Create utility function that accepts rate card values (primary steel $/MT, secondary steel $/MT, sheeting $/sqm, erection labor $/sqm) and building stats from calculateBuildingStats, then computes total project cost by multiplying each rate against corresponding quantity (primary/secondary steel weights, sheeting area, floor area). Return formatted total cost."
+        },
+        {
+          "path": "frontend/src/components/RateCardPanel.tsx",
+          "operation": "create",
+          "description": "Create Rate Card settings panel component with four numeric input fields: Primary Steel ($/MT), Secondary Steel ($/MT), Sheeting ($/sqm), and Erection Labor ($/sqm). Use local component state to persist rate values. Include labels, units, and appropriate input validation (positive numbers). Expose rate values via onChange callback."
+        },
+        {
+          "path": "frontend/src/components/EngineeringPanel.tsx",
+          "operation": "modify",
+          "description": "Add Total Project Cost display to the engineering panel. Calculate cost by calling calculateProjectCost with current rate card values and building stats. Display formatted currency value with clear label. Update reactively when building dimensions or rate card values change."
+        },
+        {
+          "path": "frontend/src/pages/ProjectViewer.tsx",
+          "operation": "modify",
+          "description": "Add RateCardPanel to a tab or collapsible section in the side panel controls. Manage rate card state at page level and pass values to EngineeringPanel for cost calculation display."
         }
       ]
     },
     {
       "id": "REQ-8",
-      "summary": "Create BuildingSignage component rendering extruded 3D text on the front fascia",
+      "summary": "Implement Advanced Export options for STAAD.Pro (.std) and IFC (BIM) formats with center-line geometry encoding.",
       "acceptanceCriteria": [
-        "Signage text is visible as 3D extruded geometry on the front fascia",
-        "Text updates in real-time as user types in the input field",
-        "Signage color follows the 'Trim' RAL color selection",
-        "Component can be toggled on/off"
+        "Clicking 'Export STAAD.Pro (.std)' downloads a valid .std text file",
+        "The .std file contains JOINT COORDINATES and MEMBER INCIDENCES sections derived from the building geometry",
+        "Clicking 'Export IFC (.ifc)' downloads a valid IFC 2x3 text file",
+        "The IFC file contains IfcColumn and IfcBeam entities with center-line coordinates",
+        "Both exports reflect the current building's dimensions and bay configuration"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/BuildingSignage.tsx",
+          "path": "frontend/src/utils/staadExporter.ts",
           "operation": "create",
-          "description": "Create a React Three Fiber component that renders 3D extruded text geometry using Text3D from @react-three/drei or Three.js ExtrudeGeometry with a loaded font. Accept props for text string, position (centered on front gable face), and color (from Trim RAL selection). Use a bold sans-serif font (e.g., Helvetica or IBM Plex Sans Bold). Set extrusion depth to create visible 3D effect. Apply material color based on trim RAL color prop. Position the text mesh at the calculated front fascia center point based on building dimensions."
+          "description": "Create utility that generates STAAD.Pro .std plain-text file format. Extract center-line node coordinates from building geometry (column bases/tops, rafter endpoints) and generate JOINT COORDINATES section with node numbers and X/Y/Z values. Generate MEMBER INCIDENCES section with member IDs and start/end node references. Return formatted text string."
         },
         {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Integrate the BuildingSignage component into the 3D scene. Add state for signage visibility toggle and text content. Pass signage text, position (calculated from building geometry), and trim color to the BuildingSignage component. Ensure signage renders in front of the fascia without z-fighting."
+          "path": "frontend/src/utils/ifcExporter.ts",
+          "operation": "create",
+          "description": "Create utility that generates minimal IFC 2x3 text file. Encode IfcColumn entities for columns and IfcBeam entities for rafters with center-line geometry using IfcCartesianPoint and IfcDirection. Include required IFC header, project context, and entity relationships. Return formatted IFC text string."
         },
         {
-          "path": "frontend/src/components/BrandingControls.tsx",
+          "path": "frontend/src/components/AdvancedExportButtons.tsx",
           "operation": "create",
-          "description": "Create a UI control panel for branding settings. Include a text input field for signage text (max 50 characters), a toggle switch to show/hide signage, and integration point for RAL color pickers (to be wired in REQ-9). Use shadcn/ui components (Input, Switch, Label). Emit signage text and visibility state to BuildingSimulator. Style with the industrial theme."
+          "description": "Create export button group component with two buttons: 'Export STAAD.Pro (.std)' and 'Export IFC (.ifc)'. On STAAD button click, call staadExporter with current building state and trigger browser download with appropriate filename. On IFC button click, call ifcExporter and trigger download. Show loading state during generation and toast notifications on completion."
         },
         {
           "path": "frontend/src/pages/ProjectViewer.tsx",
           "operation": "modify",
-          "description": "Wire the BrandingControls panel into the ProjectViewer page, positioning it in a dedicated 'Branding' section or tab. Load stored branding settings (signage text) from the backend project record and initialize the form. Save branding changes to the backend when the user updates settings."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Add RAL Color Picker panel with four independent color selections",
-      "acceptanceCriteria": [
-        "Four separate RAL color pickers are shown for Roof, Wall Cladding, Trims, and Structure",
-        "Selecting a RAL swatch immediately updates the corresponding 3D material color",
-        "RAL code and name are displayed for each swatch",
-        "Selected colors are persisted to the backend project record"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/RALColorPicker.tsx",
-          "operation": "create",
-          "description": "Create a reusable RAL color picker component that displays a curated list of at least 20 common RAL codes with their hex equivalents as selectable color swatches. Include RAL codes like 7016 (Anthracite Grey), 9006 (White Aluminium), 3000 (Flame Red), 5010 (Gentian Blue), 6005 (Moss Green), etc. Display each swatch as a clickable button with the RAL code and name. Accept props: label (e.g., 'Roof Cladding'), selectedRAL (current RAL code), and onChange callback. Use shadcn/ui components (Button, Popover or Dialog for swatch grid). Return selected RAL code and hex value to parent."
-        },
-        {
-          "path": "frontend/src/data/ralColors.ts",
-          "operation": "create",
-          "description": "Create a data module that exports a curated list of RAL colors as an array of objects with properties: code (string like 'RAL 7016'), name (string like 'Anthracite Grey'), and hex (string like '#2E3436'). Include at least 20 common RAL colors covering greys, blues, greens, reds, and neutrals."
-        },
-        {
-          "path": "frontend/src/components/BrandingControls.tsx",
-          "operation": "modify",
-          "description": "Integrate four RALColorPicker instances into the BrandingControls panel, one each for Roof Cladding, Wall Cladding, Trims, and Structural Members. Add state for each RAL color selection. Display pickers in a grid or vertical stack layout. Emit color changes to BuildingSimulator to update 3D materials. Wire color selections to persist to the backend project brandingSettings record."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Accept RAL color props for roof, wall, trims, and structure. Apply corresponding hex colors to materials used in CladdingSystem, BuildingSignage, structural members (columns, rafters), and trim elements. Use Three.js Color instances to convert hex to material colors. Ensure color changes update materials in real-time."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Implement first-person walkthrough mode with WASD movement and collision detection",
-      "acceptanceCriteria": [
-        "Clicking 'Enter Building Tour' locks the pointer and enables first-person movement",
-        "WASD keys move the camera forward/back/left/right inside the building",
-        "Mouse movement rotates the view while pointer is locked",
-        "Camera does not pass through wall or column geometries",
-        "Pressing Escape or clicking a toggle exits walkthrough and restores OrbitControls",
-        "Interior view starts at ground level looking toward the rafters"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/WalkthroughController.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component implementing first-person walkthrough mode using PointerLockControls from @react-three/drei. Listen for WASD key events (useEffect with keydown/keyup listeners) to move the camera forward, backward, left, and right relative to the look direction. Use useFrame to update camera position each frame based on active key states and movement speed. Implement basic collision detection using raycasting or bounding box checks against wall and column geometries: cast rays in movement direction and prevent position update if collision is detected. Accept props for building geometry bounds and collision meshes. Start camera at ground level inside the building looking upward toward the rafters. Expose a toggle to enable/disable pointer lock mode."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Add state for view mode toggle ('Orbit' or 'Interior'). Conditionally render either OrbitControls or WalkthroughController based on view mode state. Pass building geometry and collision mesh references to WalkthroughController. Ensure smooth transition between control modes without camera jump. Disable OrbitControls when walkthrough is active and vice versa."
-        },
-        {
-          "path": "frontend/src/components/ViewModeToggle.tsx",
-          "operation": "create",
-          "description": "Create a UI control component with a button labeled 'Enter Building Tour' (or 'Exit Tour' when active) that toggles between Orbit View and Interior View modes. Use shadcn/ui Button component. Emit view mode state to BuildingSimulator. Show a tooltip or help text explaining WASD + mouse controls when interior mode is active. Style with the industrial theme."
-        },
-        {
-          "path": "frontend/src/pages/ProjectViewer.tsx",
-          "operation": "modify",
-          "description": "Wire the ViewModeToggle button into the ProjectViewer UI, positioning it prominently near the timeline controls. Ensure the toggle is easily accessible for switching between exterior orbit view and interior walkthrough."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Implement client-side video export using MediaRecorder API",
-      "acceptanceCriteria": [
-        "Export Video button is visible in the viewer controls",
-        "Clicking it plays the full erection sequence while recording the canvas",
-        "Recording uses MediaRecorder with a high bitrate codec (VP9 or VP8)",
-        "A WebM file is automatically downloaded when recording ends",
-        "Button shows a recording indicator while capture is in progress"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useVideoExport.ts",
-          "operation": "create",
-          "description": "Create a custom React hook that manages video export using the MediaRecorder API. Accept a canvas element ref as input. Implement startRecording function that creates a MediaRecorder instance from the canvas stream with high bitrate settings (target 8–15 Mbps, use VP9 codec if available, fallback to VP8). Collect recorded chunks in an array. Implement stopRecording function that finalizes the recording, creates a Blob from chunks, generates a download URL, and triggers browser download of the WebM file with filename 'PEB-Sim-Export-{timestamp}.webm'. Return recording state (isRecording boolean) and start/stop functions. Handle errors gracefully and clean up resources."
-        },
-        {
-          "path": "frontend/src/components/VideoExportButton.tsx",
-          "operation": "create",
-          "description": "Create a UI button component that triggers video export. Use the useVideoExport hook with the Three.js canvas ref. When clicked, start the erection sequence animation from step 0 to final step at a controlled playback speed, and simultaneously start recording. Show a recording indicator (red dot or progress text) while recording is in progress. Disable the button during recording. When the animation completes, stop recording and trigger download. Use shadcn/ui Button component with appropriate styling (red recording state). Handle errors with toast notifications."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Add an imperative handle or callback prop to control the erection sequence animation playback programmatically. Expose a playFullSequence function that animates from step 0 to the final step at a fixed speed and calls a completion callback when finished. Accept a canvas ref prop to pass to the VideoExportButton. Ensure the animation runs smoothly at consistent frame rate during recording."
-        },
-        {
-          "path": "frontend/src/pages/ProjectViewer.tsx",
-          "operation": "modify",
-          "description": "Wire the VideoExportButton into the ProjectViewer UI, positioning it alongside other viewer controls (timeline, view mode toggle). Pass the canvas ref and animation control functions from BuildingSimulator to the VideoExportButton. Ensure the button is accessible and clearly labeled."
-        }
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "summary": "Add Shadow Study feature with Time of Day slider and dynamic sun positioning",
-      "acceptanceCriteria": [
-        "Time of Day slider is accessible in the UI panel",
-        "Moving the slider repositions the sun light and updates shadows in real-time",
-        "Shadows are cast on the ground plane and interior floor",
-        "When skylights are enabled, light patches are visible on the interior floor"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/ShadowStudy.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that manages a DirectionalLight for the shadow study. Accept a timeOfDay prop (number from 6 to 20 representing hours). Calculate sun position based on time: map time to sun angle (low angle at 6:00 and 20:00, high angle at midday). Position the DirectionalLight at calculated spherical coordinates (radius, elevation, azimuth) to simulate sun movement across the sky. Enable castShadow on the DirectionalLight. Configure shadow camera frustum and resolution for high quality shadows. Update light position dynamically when timeOfDay prop changes."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Integrate the ShadowStudy component into the 3D scene. Add state for time of day (default to 12:00). Pass timeOfDay to ShadowStudy component. Enable castShadow and receiveShadow on all relevant meshes: structural members, cladding, ground plane, and interior floor. Configure the renderer to enable shadows (shadowMap.enabled = true). Ensure shadow updates are performant."
-        },
-        {
-          "path": "frontend/src/components/ShadowStudyControls.tsx",
-          "operation": "create",
-          "description": "Create a UI control component with a slider input for Time of Day (range 6:00–20:00, step 0.5 hours). Display the current time value (formatted as HH:MM). Use shadcn/ui Slider component. Emit time changes to BuildingSimulator to update the sun position in real-time. Style with the industrial theme and add a sun icon for visual clarity."
-        },
-        {
-          "path": "frontend/src/pages/ProjectViewer.tsx",
-          "operation": "modify",
-          "description": "Wire the ShadowStudyControls into the ProjectViewer UI, positioning it in the lighting or environment controls section. Ensure the slider is easily accessible and updates shadows smoothly without lag."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Add Clearance Check tool with draggable vehicle presets and collision detection",
-      "acceptanceCriteria": [
-        "Clearance Check toggle adds a draggable 3D box to the scene",
-        "User can select Truck or Forklift preset sizes",
-        "Box can be dragged along the floor plane with mouse/pointer",
-        "Box turns red when it intersects a structural member, green when clear",
-        "Clearance check is independent of walkthrough mode and works in orbit view"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/ClearanceCheckBox.tsx",
-          "operation": "create",
-          "description": "Create a React Three Fiber component that renders a draggable 3D box representing a vehicle. Accept preset prop ('Truck' or 'Forklift') and set dimensions accordingly: Truck (6m L × 2.5m W × 3.5m H), Forklift (3m L × 1.5m W × 2.2m H). Render a BoxGeometry with the selected dimensions. Use useDrag hook from @use-gesture/react or pointer events to enable dragging along the XZ plane (floor). Implement collision detection using bounding box intersection checks against structural member geometries (columns, knee-braces): if the box intersects any member, set material color to red (#ff0000); otherwise set to green (#00ff00). Use MeshStandardMaterial with emissive color and some transparency. Update collision state and color on every drag event."
-        },
-        {
-          "path": "frontend/src/components/BuildingSimulator.tsx",
-          "operation": "modify",
-          "description": "Add state for clearance check mode toggle and selected vehicle preset. Conditionally render the ClearanceCheckBox component when clearance check is enabled. Pass building structural member geometries (columns, knee-braces) as collision references. Position the box at a default starting location on the floor. Ensure the clearance check works in orbit view and does not interfere with walkthrough mode."
-        },
-        {
-          "path": "frontend/src/components/ClearanceCheckControls.tsx",
-          "operation": "create",
-          "description": "Create a UI control component with a toggle switch to enable/disable Clearance Check mode and a radio group or dropdown to select vehicle preset (Truck or Forklift). Display dimensions for the selected preset. Use shadcn/ui components (Switch, RadioGroup, Label). Emit toggle state and preset selection to BuildingSimulator. Style with the industrial theme."
-        },
-        {
-          "path": "frontend/src/pages/ProjectViewer.tsx",
-          "operation": "modify",
-          "description": "Wire the ClearanceCheckControls into the ProjectViewer UI, positioning it in a tools or utilities section. Ensure the clearance check controls are accessible and clearly labeled."
+          "description": "Add AdvancedExportButtons to the engineering panel or a dedicated Export section in the side panel, near the existing BOQ and GA Drawings export buttons. Pass current building state as props."
         }
       ]
     }

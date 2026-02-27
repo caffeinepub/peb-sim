@@ -1,112 +1,62 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "PEB-Sim: A Pre-Engineered Building simulator with 3D visualization, engineering calculations, branding, walkthrough mode, and HD video export capabilities.",
+  "summary": "PEB-Sim platform — a 3D Pre-Engineered Building simulation tool. Phase 3 adds: Auto-Drafting Engine for 2D GA drawings (SVG/PDF), LOD 350 high-fidelity connection detail modals with interactive hotspots, a Collaborative Smart Share system (public read-only URLs, 3D sticky-note annotations, real-time sync via Supabase Realtime), a Commercial Costing Engine with rate card inputs and dynamic quoting, and advanced export options (STAAD.Pro .std / IFC BIM formats).",
   "architectural_notes": [
-    "3D rendering uses React Three Fiber; performance-critical secondary members use InstancedMesh",
-    "Engineering calculations run client-side in calculateBuildingStats.ts; server-side option available for security",
-    "Video export uses a backend worker queue (Puppeteer/Remotion + FFMPEG -> S3 -> email) with client-side WebM fallback",
-    "Schema.prisma extended to store branding (signage, RAL colors) and calculator inputs"
+    "DrawingGenerator service converts 3D model state to 2D vector views (SVG/PDF) using react-pdf or server-side matplotlib",
+    "LOD 350 detail modals triggered by clickable hotspot nodes placed at key structural joints in the 3D scene",
+    "Smart Share uses hashed URLs for public read-only mode; real-time collaboration via Supabase Realtime/WebSockets",
+    "Database schema requires new tables: Comments and SharedLinks",
+    "CostEstimator function reacts to building dimension changes and rate card inputs to update total cost in real-time"
   ],
-  "known_issues": [
-    "Backend data models for Users and Projects not yet fully wired up"
-  ],
+  "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Seamless trapezoidal metal roofing sheet texture, top-down view with corrugated ridges (cladding-trapezoidal.dim_512x512.png)\n- Seamless standing seam metal roof texture, top-down view with raised parallel seams (cladding-standing-seam.dim_512x512.png)\n- Seamless concrete ground texture, neutral grey with subtle aggregate detail (ground-concrete.dim_512x512.png)\n- Seamless asphalt ground texture, dark grey with fine aggregate grain (ground-asphalt.dim_512x512.png)\n- Seamless grass ground texture, green with natural blade variation (ground-grass.dim_512x512.png)",
   "existing_features": [
     {
-      "id": "feature-implement-a-sheeting-and-cladding-system-in-the-3d-scene-add-toggle-controlled-roof-and-wall-cladding-meshes-with-two-profile-texture-types-trapezoidal-and-standing-seam-rendered-via-texture-mapping-on-the-exterior-surfaces-include-a-skylight-polycarbonate-transparency-mode-that-sets-cladding-material-opacity-to-0-3-with-a-distinct-tinted-color-when-enabled",
-      "title": "Implement a sheeting and cladding system in the 3D scene: add toggle-controlled roof and wall cladding meshes with two profile texture types ('Trapezoidal' and 'Standing Seam') rendered via texture mapping on the exterior surfaces. Include a Skylight/Polycarbonate transparency mode that sets cladding material opacity to ~0.3 with a distinct tinted color when enabled.",
+      "id": "feature-implement-a-2d-ga-drawing-generator-that-takes-the-current-3d-building-model-state-dimensions-bay-spacing-roof-pitch-purlin-girt-positions-bracing-layout-anchor-bolt-locations-and-renders-four-standardized-2d-svg-views-1-anchor-bolt-plan-showing-pedestal-locations-and-column-reactions-2-cross-section-showing-clear-height-and-width-with-member-labels-3-roof-plan-showing-purlin-spacing-and-bracing-locations-4-side-elevation-showing-bay-spacing-and-wall-bracing-package-all-four-views-into-a-downloadable-pdf-file-titled-general-arrangement-ga-drawings-use-a-client-side-svg-to-pdf-approach-e-g-jspdf-svg-rendering-since-server-side-python-matplotlib-is-unavailable-add-a-download-ga-drawings-button-in-the-engineering-panel-or-export-section-of-the-projectviewer",
+      "title": "Implement a 2D GA Drawing Generator that takes the current 3D building model state (dimensions, bay spacing, roof pitch, purlin/girt positions, bracing layout, anchor bolt locations) and renders four standardized 2D SVG views: (1) Anchor Bolt Plan showing pedestal locations and column reactions, (2) Cross Section showing clear height and width with member labels, (3) Roof Plan showing purlin spacing and bracing locations, (4) Side Elevation showing bay spacing and wall bracing. Package all four views into a downloadable PDF file titled 'General Arrangement (GA) Drawings'. Use a client-side SVG-to-PDF approach (e.g., jsPDF + SVG rendering) since server-side Python/matplotlib is unavailable. Add a 'Download GA Drawings' button in the engineering panel or export section of the ProjectViewer.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-auto-generate-z-purlin-and-c-girt-secondary-structural-members-along-roof-and-wall-grid-lines-respectively-using-three-js-instancedmesh-for-performance-spacing-should-be-derived-from-the-building-bay-spacing-parameters-already-stored-in-the-project",
-      "title": "Auto-generate Z-Purlin and C-Girt secondary structural members along roof and wall grid lines respectively using Three.js InstancedMesh for performance. Spacing should be derived from the building bay spacing parameters already stored in the project.",
+      "id": "feature-implement-lod-350-high-fidelity-connection-detail-hotspots-on-the-3d-model-place-clickable-sphere-node-markers-at-key-structural-joints-rafter-to-column-haunch-both-ends-of-each-rafter-ridge-connection-apex-and-base-plate-bottom-of-each-column-when-a-node-is-clicked-open-a-modal-dialog-showing-a-high-resolution-three-js-or-svg-detail-view-of-that-connection-type-base-plate-detail-must-show-anchor-bolt-layout-4-bolt-pattern-stiffener-plates-and-a-grout-gap-between-plate-and-concrete-haunch-detail-must-show-flange-plates-bolt-rows-2-4-grid-and-web-stiffeners-also-render-concrete-pedestals-grey-box-geometry-and-foundation-blocks-larger-grey-box-below-grade-partially-clipped-beneath-each-column-base-in-the-main-3d-scene-to-visualize-the-steel-to-civil-interface",
+      "title": "Implement LOD 350 high-fidelity connection detail hotspots on the 3D model. Place clickable sphere 'node' markers at key structural joints: Rafter-to-Column Haunch (both ends of each rafter), Ridge Connection (apex), and Base Plate (bottom of each column). When a node is clicked, open a modal dialog showing a high-resolution Three.js or SVG detail view of that connection type. Base Plate detail must show: anchor bolt layout (4-bolt pattern), stiffener plates, and a grout gap between plate and concrete. Haunch detail must show: flange plates, bolt rows (2×4 grid), and web stiffeners. Also render Concrete Pedestals (grey box geometry) and Foundation Blocks (larger grey box below grade, partially clipped) beneath each column base in the main 3D scene to visualize the steel-to-civil interface.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-the-following-parametric-3d-accessory-components-to-the-building-scene-each-controllable-via-a-toggle-panel-a-turbo-ventilators-on-the-ridge-with-a-continuous-spinning-animation-b-rainwater-gutters-and-downspouts-along-the-eave-lines-c-rolling-shutters-and-personnel-doors-that-snap-to-wall-grid-positions-on-placement-d-x-bracing-rods-on-wall-bays-and-roof-panels",
-      "title": "Add the following parametric 3D accessory components to the building scene, each controllable via a toggle panel: (a) Turbo Ventilators on the ridge with a continuous spinning animation; (b) Rainwater Gutters and Downspouts along the eave lines; (c) Rolling Shutters and Personnel Doors that snap to wall grid positions on placement; (d) X-Bracing rods on wall bays and roof panels.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-an-environment-to-the-3d-scene-a-skybox-using-a-gradient-or-procedural-sky-using-react-three-drei-sky-or-a-cubecamera-approach-with-visible-clouds-and-a-ground-plane-beneath-the-building-with-switchable-texture-options-concrete-asphalt-and-grass",
-      "title": "Add an environment to the 3D scene: a skybox using a gradient or procedural sky (using @react-three/drei Sky or a CubeCamera approach) with visible clouds, and a ground plane beneath the building with switchable texture options: Concrete, Asphalt, and Grass.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-client-side-utility-module-frontend-src-utils-calculatebuildingstats-ts-that-computes-a-steel-weight-estimate-total-volume-of-all-column-and-rafter-members-7850-kg-m-b-sheeting-area-total-roof-surface-area-total-wall-surface-area-minus-door-shutter-opening-areas-c-load-simulation-accepts-wind-speed-km-h-seismic-zone-i-v-and-live-load-kn-m-inputs-and-returns-a-design-status-of-safe-or-requires-validation-using-simplified-is-800-mbma-heuristics",
-      "title": "Create a client-side utility module `frontend/src/utils/calculateBuildingStats.ts` that computes: (a) Steel weight estimate = total volume of all column and rafter members × 7850 kg/m³; (b) Sheeting area = total roof surface area + total wall surface area minus door/shutter opening areas; (c) Load simulation: accepts Wind Speed (km/h), Seismic Zone (I–V), and Live Load (kN/m²) inputs and returns a 'Design Status' of 'Safe' or 'Requires Validation' using simplified IS 800 / MBMA heuristics.",
+      "id": "feature-implement-the-frontend-public-share-view-add-a-react-route-at-share-token-that-loads-the-project-via-getprojectbysharetoken-this-view-renders-the-full-buildingsimulator-in-read-only-mode-all-editing-controls-side-panel-inputs-branding-controls-engineering-inputs-etc-are-hidden-or-disabled-show-a-view-only-badge-in-the-header-add-a-share-button-in-the-projectviewer-authenticated-view-that-calls-createsharedlink-and-displays-the-generated-share-url-in-a-copyable-dialog",
+      "title": "Implement the frontend Public Share view. Add a React route at /share/:token that loads the project via getProjectByShareToken. This view renders the full BuildingSimulator in read-only mode: all editing controls (side-panel inputs, branding controls, engineering inputs, etc.) are hidden or disabled. Show a 'View Only' badge in the header. Add a 'Share' button in the ProjectViewer (authenticated view) that calls createSharedLink and displays the generated share URL in a copyable dialog.",
       "reqIds": [
         "REQ-5"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-an-engineering-boq-panel-in-the-ui-that-displays-the-calculated-stats-from-calculatebuildingstats-ts-and-provides-a-download-boq-button-the-download-must-export-a-csv-file-listing-all-structural-and-cladding-parts-with-quantities-dimensions-and-estimated-weights-optionally-render-the-same-data-as-a-printable-html-page-for-pdf-export-via-browser-print",
-      "title": "Add an Engineering / BOQ panel in the UI that displays the calculated stats from `calculateBuildingStats.ts` and provides a 'Download BOQ' button. The download must export a CSV file listing all structural and cladding parts with quantities, dimensions, and estimated weights. Optionally render the same data as a printable HTML page for PDF export via browser print.",
+      "id": "feature-implement-the-3d-annotation-sticky-note-ui-in-projectviewer-when-the-authenticated-user-double-clicks-on-a-structural-element-column-rafter-etc-in-the-3d-scene-show-a-small-input-popover-anchored-near-the-click-point-to-type-a-comment-then-submit-it-via-addcomment-render-all-existing-comments-for-the-project-as-floating-3d-billboard-markers-e-g-a-yellow-sticky-note-icon-author-initial-positioned-at-their-stored-world-space-coordinates-add-a-collapsible-commentsidebar-panel-listing-all-annotations-with-element-reference-author-text-and-a-delete-button-for-own-comments-the-share-read-only-view-shows-markers-and-sidebar-in-read-only-mode-no-add-delete",
+      "title": "Implement the 3D Annotation (Sticky Note) UI in ProjectViewer. When the authenticated user double-clicks on a structural element (column, rafter, etc.) in the 3D scene, show a small input popover anchored near the click point to type a comment, then submit it via addComment. Render all existing comments for the project as floating 3D billboard markers (e.g., a yellow sticky-note icon + author initial) positioned at their stored world-space coordinates. Add a collapsible CommentSidebar panel listing all annotations with element reference, author, text, and a delete button (for own comments). The share/read-only view shows markers and sidebar in read-only mode (no add/delete).",
       "reqIds": [
         "REQ-6"
       ],
       "version": 1
     },
     {
-      "id": "feature-create-a-buildingsignage-react-three-fiber-component-that-renders-extruded-3d-text-geometry-on-the-front-fascia-of-the-building-accept-a-text-string-input-e-g-factory-a-from-a-ui-text-field-use-react-three-drei-s-text3d-or-three-js-extrudegeometry-with-a-font-mount-the-signage-centered-on-the-front-gable-face",
-      "title": "Create a `BuildingSignage` React Three Fiber component that renders extruded 3D text geometry on the front fascia of the building. Accept a text string input (e.g., 'Factory A') from a UI text field. Use `@react-three/drei`'s `Text3D` or Three.js `ExtrudeGeometry` with a font. Mount the signage centered on the front gable face.",
+      "id": "feature-implement-the-commercial-costing-engine-add-a-rate-card-settings-panel-accessible-via-a-tab-or-modal-in-projectviewer-with-four-numeric-inputs-primary-steel-mt-secondary-steel-mt-sheeting-sqm-and-erection-labor-sqm-persist-these-rates-in-local-component-state-no-backend-persistence-required-add-a-calculateprojectcost-utility-function-that-multiplies-each-rate-against-the-corresponding-calculated-quantities-from-calculatebuildingstats-primary-steel-weight-in-mt-secondary-steel-weight-in-mt-total-sheeting-area-in-sqm-floor-area-in-sqm-for-labor-display-the-computed-total-project-cost-as-a-formatted-currency-value-in-the-engineering-sidebar-panel-updating-reactively-whenever-building-dimensions-or-rate-card-values-change",
+      "title": "Implement the Commercial Costing Engine. Add a 'Rate Card' settings panel (accessible via a tab or modal in ProjectViewer) with four numeric inputs: Primary Steel ($/MT), Secondary Steel ($/MT), Sheeting ($/sqm), and Erection Labor ($/sqm). Persist these rates in local component state (no backend persistence required). Add a `calculateProjectCost` utility function that multiplies each rate against the corresponding calculated quantities from `calculateBuildingStats` (primary steel weight in MT, secondary steel weight in MT, total sheeting area in sqm, floor area in sqm for labor). Display the computed 'Total Project Cost' as a formatted currency value in the engineering sidebar panel, updating reactively whenever building dimensions or rate card values change.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-advanced-export-options-for-staad-pro-std-and-ifc-bim-formats-add-an-export-section-in-projectviewer-e-g-in-the-engineering-panel-or-a-dedicated-export-tab-with-two-buttons-export-staad-pro-std-and-export-ifc-ifc-the-staad-pro-export-generates-a-plain-text-std-file-encoding-the-center-line-node-coordinates-and-member-connectivity-joint-coordinates-and-member-incidences-sections-from-the-current-building-geometry-the-ifc-export-generates-a-minimal-ifc-2x3-text-file-encoding-ifccolumn-and-ifcbeam-entities-with-their-center-line-geometry-both-exports-trigger-a-browser-file-download",
+      "title": "Implement Advanced Export options for STAAD.Pro (.std) and IFC (BIM) formats. Add an 'Export' section in ProjectViewer (e.g., in the engineering panel or a dedicated Export tab) with two buttons: 'Export STAAD.Pro (.std)' and 'Export IFC (.ifc)'. The STAAD.Pro export generates a plain-text .std file encoding the center-line node coordinates and member connectivity (JOINT COORDINATES and MEMBER INCIDENCES sections) from the current building geometry. The IFC export generates a minimal IFC 2x3 text file encoding IfcColumn and IfcBeam entities with their center-line geometry. Both exports trigger a browser file download.",
       "reqIds": [
         "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-ral-color-picker-panel-in-the-ui-with-four-independent-color-pickers-for-roof-cladding-wall-cladding-trims-and-structural-members-provide-a-curated-list-of-at-least-20-common-ral-codes-with-their-hex-equivalents-as-selectable-swatches-applying-a-color-updates-the-corresponding-3d-materials-in-the-scene-immediately",
-      "title": "Add a RAL Color Picker panel in the UI with four independent color pickers for: Roof Cladding, Wall Cladding, Trims, and Structural Members. Provide a curated list of at least 20 common RAL codes with their hex equivalents as selectable swatches. Applying a color updates the corresponding 3D materials in the scene immediately.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-walkthroughcontroller-tsx-component-implementing-a-first-person-walkthrough-mode-inside-the-building-using-pointerlockcontrols-from-react-three-drei-implement-wasd-keyboard-movement-and-mouse-look-add-basic-collision-detection-to-prevent-the-camera-from-passing-through-wall-and-column-meshes-add-a-toggle-button-in-the-ui-to-switch-between-orbit-view-exterior-using-orbitcontrols-and-interior-view-first-person-inside-the-building-looking-up-at-the-rafters",
-      "title": "Create a `WalkthroughController.tsx` component implementing a first-person walkthrough mode inside the building using `PointerLockControls` from `@react-three/drei`. Implement WASD keyboard movement and mouse-look. Add basic collision detection to prevent the camera from passing through wall and column meshes. Add a toggle button in the UI to switch between Orbit View (exterior, using OrbitControls) and Interior View (first-person inside the building looking up at the rafters).",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-a-client-side-video-export-feature-using-the-mediarecorder-api-add-an-export-video-button-that-starts-recording-the-three-js-canvas-at-high-bitrate-target-8-15-mbps-while-playing-through-the-erection-sequence-animation-from-step-0-to-the-final-step-when-the-animation-completes-stop-the-recording-and-trigger-a-browser-download-of-the-resulting-webm-file",
-      "title": "Implement a client-side video export feature using the MediaRecorder API. Add an 'Export Video' button that starts recording the Three.js canvas at high bitrate (target 8–15 Mbps) while playing through the erection sequence animation from step 0 to the final step. When the animation completes, stop the recording and trigger a browser download of the resulting WebM file.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-shadow-study-feature-a-time-of-day-slider-range-6-00-20-00-that-dynamically-repositions-a-directionallight-in-the-3d-scene-to-simulate-sun-angle-at-the-selected-time-casting-real-time-shadows-through-the-building-shadows-should-be-visible-on-the-ground-plane-and-interior-surfaces-enabling-skylight-planning-enable-castshadow-and-receiveshadow-on-all-relevant-meshes",
-      "title": "Add a 'Shadow Study' feature: a 'Time of Day' slider (range 6:00–20:00) that dynamically repositions a `DirectionalLight` in the 3D scene to simulate sun angle at the selected time, casting real-time shadows through the building. Shadows should be visible on the ground plane and interior surfaces, enabling skylight planning. Enable `castShadow` and `receiveShadow` on all relevant meshes.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-clearance-check-tool-render-a-draggable-3d-box-inside-the-building-representing-a-standard-vehicle-use-truck-preset-6m-l-2-5m-w-3-5m-h-and-forklift-preset-3m-l-1-5m-w-2-2m-h-allow-the-user-to-drag-it-along-the-floor-plane-using-pointer-events-highlight-the-box-red-if-it-intersects-with-any-structural-member-column-knee-brace-and-green-when-clearance-is-confirmed",
-      "title": "Add a 'Clearance Check' tool: render a draggable 3D box inside the building representing a standard vehicle (use Truck preset: ~6m L × 2.5m W × 3.5m H, and Forklift preset: ~3m L × 1.5m W × 2.2m H). Allow the user to drag it along the floor plane using pointer events. Highlight the box red if it intersects with any structural member (column, knee-brace) and green when clearance is confirmed.",
-      "reqIds": [
-        "REQ-13"
       ],
       "version": 1
     }
@@ -114,51 +64,47 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Advanced 3D sheeting & cladding with texture mapping (Trapezoidal/Standing Seam), skylight transparency, Z-Purlins/C-Girts via InstancedMesh, accessories (turbo ventilators, gutters, shutters, bracing), and environment skybox/ground textures",
+      "summary": "Auto-Drafting Engine: generate 2D GA drawings (Anchor Bolt Plan, Cross Section, Roof Plan, Side Elevation) as SVG/PDF downloadable package",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Engineering calculator & BOQ engine: steel weight estimation, sheeting area, load simulation (IS 800/MBMA), downloadable CSV/PDF Bill of Materials",
+      "summary": "LOD 350 connection detail modals: interactive hotspots at structural joints (haunch, ridge, base plate) showing high-res detail including concrete pedestals/foundation blocks",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Interactive branding: 3D extruded building signage (text/logo upload) and RAL color picker for roof, walls, trims, and structures",
+      "summary": "Collaborative Smart Share: unique hashed read-only URLs, 3D sticky-note annotations on elements, real-time model sync via WebSockets/Supabase Realtime",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "First-person building walkthrough mode using PointerLockControls (WASD+mouse), collision detection, and orbit/interior view toggle",
+      "summary": "Commercial Costing Engine: rate card settings panel (Primary Steel, Secondary Steel, Sheeting, Erection Labor) with real-time dynamic total project cost in sidebar",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "HD video export pipeline: server-side rendering via Puppeteer/Remotion + FFMPEG -> S3 -> email link, with client-side WebM fallback using MediaRecorder API",
+      "summary": "Advanced export: center-line geometry export to STAAD.Pro .std and IFC BIM formats for structural analysis",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-6",
-      "summary": "Shadow study: Time of Day slider to simulate sun position and interior shadow casting for skylight planning",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Clearance check: draggable 3D truck/forklift cube inside the building to verify fit under knee-braces",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Persist engineering calculator inputs (Wind Speed, Seismic Zone, Live Load) and branding settings (signage text, RAL color selections) as part of the project data in the Motoko backend. Extend the project data structure in `backend/main.mo` to store a `brandingSettings` and `engineeringInputs` record on each project, with corresponding update and query methods.",
+      "id": "AR-8",
+      "summary": "Implement a backend data model for SharedLinks. Each SharedLink record must store: a unique hashed token (e.g., 8-char alphanumeric), the source projectId, the ownerPrincipal, and a createdAt timestamp. Add backend endpoints: createSharedLink(projectId) → returns the token, getProjectByShareToken(token) → returns project data in read-only form (no mutation access). Store SharedLinks in stable backend state.",
       "reqIds": [
-        "REQ-7"
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Implement a backend data model for Comments (3D Annotations). Each Comment record must store: a unique ID, the projectId it belongs to, the author principal, the target element identifier (e.g., 'column-2'), the 3D world-space position (x, y, z floats), the comment text, and a createdAt timestamp. Add backend endpoints: addComment(projectId, elementId, position, text) → returns the created Comment, getComments(projectId) → returns all comments for a project, deleteComment(commentId) → removes a comment (owner or project-owner only).",
+      "reqIds": [
+        "REQ-4"
       ],
       "status": "pending"
     }

@@ -1,86 +1,96 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
+import React from 'react';
+import {
+  createRouter,
+  createRoute,
+  createRootRoute,
+  RouterProvider,
+  Outlet,
+} from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
-import Layout from './components/Layout';
+
+// Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ProjectViewer from './pages/ProjectViewer';
 import Pricing from './pages/Pricing';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailure from './pages/PaymentFailure';
+import ShareView from './pages/ShareView';
 
-// Root route with layout
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+    },
+  },
+});
+
+// Root layout
 const rootRoute = createRootRoute({
   component: () => (
-    <>
-      <Outlet />
-      <Toaster theme="dark" />
-    </>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <Outlet />
+        <Toaster richColors position="top-right" />
+      </ThemeProvider>
+    </QueryClientProvider>
   ),
 });
 
-// Login route (public)
+// Routes
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   component: Login,
 });
 
-// Authenticated layout route (pathless, uses id)
-const authenticatedRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  id: 'authenticated',
-  component: () => (
-    <Layout>
-      <Outlet />
-    </Layout>
-  ),
-});
-
-// Dashboard route
 const dashboardRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => rootRoute,
   path: '/',
   component: Dashboard,
 });
 
-// Project viewer route
 const projectViewerRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => rootRoute,
   path: '/project/$projectId',
   component: ProjectViewer,
 });
 
-// Pricing route
 const pricingRoute = createRoute({
-  getParentRoute: () => authenticatedRoute,
+  getParentRoute: () => rootRoute,
   path: '/pricing',
   component: Pricing,
 });
 
-// Payment success route
 const paymentSuccessRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/payment-success',
   component: PaymentSuccess,
 });
 
-// Payment failure route
 const paymentFailureRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/payment-failure',
   component: PaymentFailure,
 });
 
+const shareViewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/share/$token',
+  component: ShareView,
+});
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  authenticatedRoute.addChildren([
-    dashboardRoute,
-    projectViewerRoute,
-    pricingRoute,
-  ]),
+  dashboardRoute,
+  projectViewerRoute,
+  pricingRoute,
   paymentSuccessRoute,
   paymentFailureRoute,
+  shareViewRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -92,9 +102,5 @@ declare module '@tanstack/react-router' {
 }
 
 export default function App() {
-  return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} forcedTheme="dark">
-      <RouterProvider router={router} />
-    </ThemeProvider>
-  );
+  return <RouterProvider router={router} />;
 }

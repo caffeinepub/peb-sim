@@ -4,13 +4,19 @@ import Time "mo:core/Time";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
+import Char "mo:core/Char";
+import List "mo:core/List";
 import Migration "migration";
+
 import AccessControl "authorization/access-control";
 import Stripe "stripe/stripe";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import OutCall "http-outcalls/outcall";
 
+// Enable seamless migration on redeployment due to changes in persistent state
 (with migration = Migration.run)
 actor {
   // Types
@@ -65,6 +71,46 @@ actor {
     email : Text;
   };
 
+  public type SharedLink = {
+    token : Text;
+    projectId : Nat;
+    ownerPrincipal : Principal;
+    createdAt : Time.Time;
+  };
+
+  public type Comment = {
+    id : Nat;
+    projectId : Nat;
+    author : Principal;
+    elementId : Text;
+    position : { x : Float; y : Float; z : Float };
+    text : Text;
+    createdAt : Time.Time;
+  };
+
+  // Shared Links state
+  var nextSharedLinkId = 1;
+  let sharedLinks = Map.empty<Text, SharedLink>();
+
+  func generateToken() : Text {
+    let chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let charsArray = chars.toArray();
+    let tokenList = List.empty<Char>();
+
+    var i = 0;
+    while (i < 8) {
+      let char = charsArray[i % chars.size()];
+      tokenList.add(char);
+      i += 1;
+    };
+
+    Text.fromArray(tokenList.toArray());
+  };
+
+  // Comment state
+  var nextCommentId = 1;
+  let comments = Map.empty<Nat, Comment>();
+
   // State
   var nextProjectId = 1;
   let users = Map.empty<Principal, User>();
@@ -86,8 +132,97 @@ actor {
     };
   };
 
-  // ---- UserProfile functions required by the frontend ----
+  // ---- Shared Links ----
+  public shared ({ caller }) func createSharedLink(projectId : Nat) : async Text {
+    ensureAuthenticatedOrTrap(caller);
 
+    // Verify ownership
+    switch (projects.get(projectId)) {
+      case (null) { Runtime.trap("Project does not exist") };
+      case (?project) {
+        if (caller != project.ownerId and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Unauthorized: Can only share your own projects");
+        };
+      };
+    };
+
+    let token = generateToken();
+    let sharedLink : SharedLink = {
+      token;
+      projectId;
+      ownerPrincipal = caller;
+      createdAt = Time.now();
+    };
+
+    sharedLinks.add(token, sharedLink);
+    token;
+  };
+
+  public query ({ caller }) func getProjectByShareToken(token : Text) : async ?Project {
+    switch (sharedLinks.get(token)) {
+      case (null) { null };
+      case (?sharedLink) {
+        projects.get(sharedLink.projectId);
+      };
+    };
+  };
+
+  // ---- 3D Annotations / Comments ----
+  public shared ({ caller }) func addComment(projectId : Nat, elementId : Text, position : { x : Float; y : Float; z : Float }, text : Text) : async Comment {
+    ensureAuthenticatedOrTrap(caller);
+
+    // Validate project existence
+    switch (projects.get(projectId)) {
+      case (null) { Runtime.trap("Project does not exist") };
+      case (_) {};
+    };
+
+    let id = nextCommentId;
+    nextCommentId += 1;
+
+    let comment : Comment = {
+      id;
+      projectId;
+      author = caller;
+      elementId;
+      position;
+      text;
+      createdAt = Time.now();
+    };
+
+    comments.add(id, comment);
+    comment;
+  };
+
+  public query ({ caller }) func getComments(projectId : Nat) : async [Comment] {
+    comments.values().toArray().filter(func(c) { c.projectId == projectId });
+  };
+
+  public shared ({ caller }) func deleteComment(commentId : Nat) : async () {
+    ensureAuthenticatedOrTrap(caller);
+
+    switch (comments.get(commentId)) {
+      case (null) { Runtime.trap("Comment does not exist") };
+      case (?comment) {
+        switch (projects.get(comment.projectId)) {
+          case (null) { Runtime.trap("Project does not exist") };
+          case (?project) {
+            if (
+              caller != comment.author and
+              caller != project.ownerId and
+              not AccessControl.isAdmin(accessControlState, caller)
+            ) {
+              Runtime.trap("Unauthorized: Only authors or project owners can delete comments");
+            };
+          };
+        };
+      };
+    };
+
+    comments.remove(commentId);
+  };
+
+  // ---- UserProfile functions required by the frontend ----
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can get profiles");
@@ -147,7 +282,6 @@ actor {
   };
 
   // ---- User functions ----
-
   public shared ({ caller }) func registerUser(displayName : Text, email : Text) : async User {
     ensureAuthenticatedOrTrap(caller);
 
@@ -213,7 +347,6 @@ actor {
   };
 
   // ---- Project functions ----
-
   public shared ({ caller }) func createProject(
     name : Text,
     uploadedFileName : Text,
@@ -375,7 +508,6 @@ actor {
   };
 
   // ---- Stripe / Payment functions ----
-
   public query ({ caller }) func isStripeConfigured() : async Bool {
     stripeConfig != null;
   };
@@ -406,4 +538,3 @@ actor {
     OutCall.transform(input);
   };
 };
-

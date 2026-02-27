@@ -15,6 +15,15 @@ export interface BrandingSettings {
   'signageText' : string,
   'secondaryColorRal' : string,
 }
+export interface Comment {
+  'id' : bigint,
+  'createdAt' : Time,
+  'text' : string,
+  'author' : Principal,
+  'projectId' : bigint,
+  'elementId' : string,
+  'position' : { 'x' : number, 'y' : number, 'z' : number },
+}
 export interface EngineeringInputs {
   'windSpeed' : bigint,
   'liveLoad' : bigint,
@@ -109,6 +118,10 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addComment' : ActorMethod<
+    [bigint, string, { 'x' : number, 'y' : number, 'z' : number }, string],
+    Comment
+  >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createCheckoutSession' : ActorMethod<
     [Array<ShoppingItem>, string, string],
@@ -118,10 +131,14 @@ export interface _SERVICE {
     [string, string, EngineeringInputs, BrandingSettings],
     bigint
   >,
+  'createSharedLink' : ActorMethod<[bigint], string>,
+  'deleteComment' : ActorMethod<[bigint], undefined>,
   'deleteProject' : ActorMethod<[bigint], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getComments' : ActorMethod<[bigint], Array<Comment>>,
   'getProject' : ActorMethod<[bigint], Project>,
+  'getProjectByShareToken' : ActorMethod<[string], [] | [Project]>,
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getUser' : ActorMethod<[Principal], User>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,

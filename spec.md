@@ -1,21 +1,18 @@
 # Specification
 
 ## Summary
-**Goal:** Extend the PEB-Sim 3D building configurator with advanced visualization, secondary structural members, accessories, environment, engineering calculations, BOQ export, RAL color branding, 3D signage, first-person walkthrough, video export, shadow study, and clearance check tools.
+**Goal:** Extend PEB-Sim with auto-drafting (GA Drawings PDF), LOD 350 connection detail hotspots, shared read-only links, 3D sticky-note annotations, a commercial costing engine, and advanced structural exports (STAAD.Pro / IFC).
 
 **Planned changes:**
-- Add roof and wall cladding meshes with Trapezoidal and Standing Seam texture options, plus a Skylight/Polycarbonate semi-transparent mode, each independently toggled from the UI
-- Auto-generate Z-Purlin and C-Girt secondary structural members using InstancedMesh along bay grid lines with a show/hide toggle
-- Add parametric 3D accessories: spinning Turbo Ventilators on the ridge, Gutters and Downspouts along eaves, snap-to-grid Rolling Shutters and Personnel Doors, and X-Bracing for walls and roof bays — each with an independent toggle
-- Add a skybox with procedural sky and clouds, plus a ground plane with switchable textures (Concrete, Asphalt, Grass)
-- Create a `calculateBuildingStats.ts` utility that computes steel weight estimate, sheeting area, and a simplified load simulation returning Safe or Requires Validation
-- Add an Engineering / BOQ panel displaying stats from the utility, with a Download BOQ button that exports a CSV of all parts, quantities, dimensions, and weights
-- Extend the Motoko backend project record to store `brandingSettings` (signageText, RAL colors for roof/wall/trim/structure) and `engineeringInputs` (windSpeed, seismicZone, liveLoad) with update and query methods
-- Add a `BuildingSignage` component rendering user-typed text as extruded 3D geometry centered on the front fascia, colored by Trim RAL selection, toggleable
-- Add a RAL Color Picker panel with four independent pickers (Roof, Wall Cladding, Trims, Structure) showing at least 20 RAL swatches that immediately update 3D materials and persist to the backend
-- Create a `WalkthroughController.tsx` using PointerLockControls for first-person WASD + mouse-look interior view with basic collision detection, toggled against OrbitControls exterior view
-- Add a client-side video export button that records the Three.js canvas during full erection sequence playback using MediaRecorder (high-bitrate VP9/VP8) and downloads a WebM file
-- Add a Shadow Study Time of Day slider (6:00–20:00) that repositions a DirectionalLight to simulate sun angle and cast real-time shadows on the ground and interior surfaces
-- Add a Clearance Check tool with a draggable 3D box (Truck or Forklift preset) on the floor plane that turns red on structural member intersection and green when clear
+- Add a 2D GA Drawing Generator that renders four SVG views (Anchor Bolt Plan, Cross Section, Roof Plan, Side Elevation) and packages them into a downloadable PDF via a "Download GA Drawings" button in the engineering panel
+- Add LOD 350 clickable hotspot spheres (glowing amber) at Haunch, Ridge, and Base Plate joints; clicking opens a modal with a detailed SVG/Three.js connection view (anchor bolts, stiffener plates, grout gap, bolt rows)
+- Render Concrete Pedestal and Foundation Block geometry beneath each column in the main 3D scene
+- Add backend SharedLink data model (token, projectId, ownerPrincipal, createdAt) with `createSharedLink` and `getProjectByShareToken` endpoints persisted in the Motoko actor
+- Add backend Comment data model (id, projectId, author, elementId, position xyz, text, createdAt) with `addComment`, `getComments`, and `deleteComment` endpoints persisted in the Motoko actor
+- Add a `/share/:token` React route that renders the full 3D building viewer in read-only mode (all editing controls hidden, "View Only" badge shown); invalid tokens show an error message
+- Add a "Share" button in ProjectViewer that calls `createSharedLink` and shows the generated URL in a copyable dialog
+- Implement 3D sticky-note annotation UI: double-clicking a structural element opens a comment input popover; submitted comments appear as floating yellow billboard markers in the 3D scene; a collapsible CommentSidebar lists all annotations with author, element reference, text, and per-own-comment delete; share view shows markers/sidebar read-only
+- Add a Rate Card settings panel with four numeric inputs (Primary Steel $/MT, Secondary Steel $/MT, Sheeting $/sqm, Erection Labor $/sqm) stored in local state; add a `calculateProjectCost` utility that multiplies rates against quantities from `calculateBuildingStats`; display a live "Total Project Cost" formatted currency value in the engineering sidebar
+- Add an Export section with "Export STAAD.Pro (.std)" and "Export IFC (.ifc)" buttons that generate and download the respective text files encoding node coordinates, member incidences, IfcColumn, and IfcBeam entities from the current building geometry
 
-**User-visible outcome:** Users can visualize a fully clad PEB building with secondary members, accessories, environment, and branding; run engineering calculations and download a BOQ CSV; walk through the building in first person; export an animation video; study shadow/skylight planning; and verify vehicle clearance — all within the browser.
+**User-visible outcome:** Engineers can download GA drawing PDFs, inspect high-fidelity connection details, share a read-only model link with clients, leave and view 3D sticky-note annotations on structural elements, see a live commercial cost estimate that updates with building changes, and export center-line geometry to STAAD.Pro or IFC formats.

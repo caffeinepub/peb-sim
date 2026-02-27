@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useListProjects, useGetCurrentUser } from '../hooks/useQueries';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
+import { useListProjects, useGetCurrentUser, useGetCallerUserProfile } from '../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ProjectList from '../components/ProjectList';

@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback, useEffect, forwardRef, useImperativeHandle, Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Stats } from "@react-three/drei";
 import * as THREE from "three";
 import CladdingSystem from "./CladdingSystem";
@@ -13,11 +13,16 @@ import ShadowStudy from "./ShadowStudy";
 import BuildingSignage from "./BuildingSignage";
 import WalkthroughController from "./WalkthroughController";
 import ClearanceCheckBox from "./ClearanceCheckBox";
+import ConnectionHotspots from "./ConnectionHotspots";
+import FoundationGeometry from "./FoundationGeometry";
+import AnnotationMarkers from "./AnnotationMarkers";
 import type { CladdingState } from "./CladdingControls";
 import type { AccessoryState } from "./AccessoryControls";
 import type { BrandingState } from "./BrandingControls";
 import type { GroundTexture } from "./EnvironmentScene";
 import type { VehiclePreset } from "./ClearanceCheckBox";
+import type { HotspotData } from "./ConnectionHotspots";
+import type { Comment } from "@/backend";
 
 export interface BuildingParams {
   length: number;
@@ -48,6 +53,14 @@ interface BuildingSimulatorProps {
   clearancePreset: VehiclePreset;
   onWalkthroughExit: () => void;
   onErectionStepChange?: (step: number) => void;
+  onHotspotClick?: (hotspot: HotspotData) => void;
+  comments?: Comment[];
+  onCommentMarkerClick?: (comment: Comment) => void;
+  onDoubleClickElement?: (
+    elementId: string,
+    worldPosition: { x: number; y: number; z: number },
+    screenPosition: { x: number; y: number }
+  ) => void;
 }
 
 // Inner scene component
@@ -63,8 +76,13 @@ function BuildingScene({
   clearanceEnabled,
   clearancePreset,
   onWalkthroughExit,
+  onHotspotClick,
+  comments = [],
+  onCommentMarkerClick,
+  onDoubleClickElement,
 }: Omit<BuildingSimulatorProps, "onErectionStepChange">) {
   const { length, width, height, ridgeHeight, baySpacing, numBays, erectionStep, totalSteps } = params;
+  const { gl, camera } = useThree();
 
   const columnColor = brandingState.structureColor.hex;
   const rafterColor = brandingState.structureColor.hex;
@@ -89,14 +107,12 @@ function BuildingScene({
   const structuralBounds: THREE.Box3[] = [];
   for (let b = 0; b <= numBays; b++) {
     const z = -length / 2 + b * baySpacing;
-    // Left column
     structuralBounds.push(
       new THREE.Box3(
         new THREE.Vector3(-width / 2 - colW / 2, 0, z - colD / 2),
         new THREE.Vector3(-width / 2 + colW / 2, height, z + colD / 2)
       )
     );
-    // Right column
     structuralBounds.push(
       new THREE.Box3(
         new THREE.Vector3(width / 2 - colW / 2, 0, z - colD / 2),
@@ -124,6 +140,31 @@ function BuildingScene({
       ]
     : [];
 
+  // Handle double-click on structural elements
+  const handleMeshDoubleClick = useCallback(
+    (e: any, elementId: string) => {
+      if (!onDoubleClickElement) return;
+      e.stopPropagation();
+      const worldPos = {
+        x: e.point.x,
+        y: e.point.y,
+        z: e.point.z,
+      };
+      // Project to screen space
+      const canvas = gl.domElement;
+      const rect = canvas.getBoundingClientRect();
+      const vec = new THREE.Vector3(e.point.x, e.point.y, e.point.z);
+      vec.project(camera);
+      const screenX = ((vec.x + 1) / 2) * rect.width + rect.left;
+      const screenY = ((-vec.y + 1) / 2) * rect.height + rect.top;
+      onDoubleClickElement(elementId, worldPos, { x: screenX, y: screenY });
+    },
+    [onDoubleClickElement, gl, camera]
+  );
+
+  // Roof pitch for hotspots
+  const roofPitch = Math.atan2(ridgeHeight - height, width / 2) * (180 / Math.PI);
+
   return (
     <>
       {/* Lighting */}
@@ -134,6 +175,13 @@ function BuildingScene({
         <EnvironmentScene groundTexture={groundTexture} timeOfDay={timeOfDay} />
       </Suspense>
 
+      {/* Foundation geometry (pedestals + footings) */}
+      <FoundationGeometry
+        span={width}
+        length={length}
+        baySpacing={baySpacing}
+      />
+
       {/* Structural Frame */}
       <group>
         {Array.from({ length: Math.min(visibleBays + 1, numBays + 1) }).map((_, frameIdx) => {
@@ -141,12 +189,22 @@ function BuildingScene({
           return (
             <group key={`frame-${frameIdx}`}>
               {/* Left column */}
-              <mesh position={[-width / 2, height / 2, z]} castShadow receiveShadow>
+              <mesh
+                position={[-width / 2, height / 2, z]}
+                castShadow
+                receiveShadow
+                onDoubleClick={(e) => handleMeshDoubleClick(e, `column-left-${frameIdx}`)}
+              >
                 <boxGeometry args={[colW, height, colD]} />
                 <meshStandardMaterial color={columnColor} metalness={0.7} roughness={0.3} />
               </mesh>
               {/* Right column */}
-              <mesh position={[width / 2, height / 2, z]} castShadow receiveShadow>
+              <mesh
+                position={[width / 2, height / 2, z]}
+                castShadow
+                receiveShadow
+                onDoubleClick={(e) => handleMeshDoubleClick(e, `column-right-${frameIdx}`)}
+              >
                 <boxGeometry args={[colW, height, colD]} />
                 <meshStandardMaterial color={columnColor} metalness={0.7} roughness={0.3} />
               </mesh>
@@ -156,6 +214,7 @@ function BuildingScene({
                 rotation={[0, 0, Math.atan2(ridgeHeight - height, width / 2)]}
                 castShadow
                 receiveShadow
+                onDoubleClick={(e) => handleMeshDoubleClick(e, `rafter-left-${frameIdx}`)}
               >
                 <boxGeometry
                   args={[
@@ -172,6 +231,7 @@ function BuildingScene({
                 rotation={[0, 0, -Math.atan2(ridgeHeight - height, width / 2)]}
                 castShadow
                 receiveShadow
+                onDoubleClick={(e) => handleMeshDoubleClick(e, `rafter-right-${frameIdx}`)}
               >
                 <boxGeometry
                   args={[
@@ -266,6 +326,24 @@ function BuildingScene({
         />
       )}
 
+      {/* LOD 350 Connection Hotspots */}
+      {onHotspotClick && (
+        <ConnectionHotspots
+          span={width}
+          height={height}
+          roofPitch={roofPitch}
+          onHotspotClick={onHotspotClick}
+        />
+      )}
+
+      {/* Annotation Markers */}
+      {comments.length > 0 && onCommentMarkerClick && (
+        <AnnotationMarkers
+          comments={comments}
+          onMarkerClick={onCommentMarkerClick}
+        />
+      )}
+
       {/* Controls */}
       {isWalkthrough ? (
         <WalkthroughController
@@ -299,7 +377,7 @@ const BuildingSimulator = forwardRef<BuildingSimulatorHandle, BuildingSimulatorP
         let step = 0;
         const totalSteps = params.totalSteps;
         const fps = 30;
-        const durationMs = 5000; // 5 seconds total
+        const durationMs = 5000;
         const stepInterval = durationMs / totalSteps;
         let lastTime = performance.now();
 

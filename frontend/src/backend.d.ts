@@ -18,6 +18,19 @@ export interface TransformationOutput {
     headers: Array<http_header>;
 }
 export type Time = bigint;
+export interface Comment {
+    id: bigint;
+    createdAt: Time;
+    text: string;
+    author: Principal;
+    projectId: bigint;
+    elementId: string;
+    position: {
+        x: number;
+        y: number;
+        z: number;
+    };
+}
 export interface User {
     id: Principal;
     displayName: string;
@@ -99,13 +112,22 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    addComment(projectId: bigint, elementId: string, position: {
+        x: number;
+        y: number;
+        z: number;
+    }, text: string): Promise<Comment>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
     createProject(name: string, uploadedFileName: string, engineeringInputs: EngineeringInputs, brandingSettings: BrandingSettings): Promise<bigint>;
+    createSharedLink(projectId: bigint): Promise<string>;
+    deleteComment(commentId: bigint): Promise<void>;
     deleteProject(projectId: bigint): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getComments(projectId: bigint): Promise<Array<Comment>>;
     getProject(id: bigint): Promise<Project>;
+    getProjectByShareToken(token: string): Promise<Project | null>;
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUser(userId: Principal): Promise<User>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
