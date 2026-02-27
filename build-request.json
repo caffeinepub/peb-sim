@@ -1,0 +1,290 @@
+{
+  "kind": "build_request",
+  "title": "Phase 2: Advanced Visualization, Engineering Logic & Media Export",
+  "projectName": "PEB-Sim",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Implement a sheeting and cladding system in the 3D scene: add toggle-controlled roof and wall cladding meshes with two profile texture types ('Trapezoidal' and 'Standing Seam') rendered via texture mapping on the exterior surfaces. Include a Skylight/Polycarbonate transparency mode that sets cladding material opacity to ~0.3 with a distinct tinted color when enabled.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Implement a texture mapping system for 'Trapezoidal' and 'Standing Seam' roof/wall profiles. Include logic for transparency (Skylights/Polycarbonate sheets)."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Roof and wall surfaces display Trapezoidal or Standing Seam cladding textures based on selected toggle",
+        "Skylight mode renders cladding as semi-transparent polycarbonate material",
+        "Cladding toggles in the UI control visibility independently for roof and walls"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Auto-generate Z-Purlin and C-Girt secondary structural members along roof and wall grid lines respectively using Three.js InstancedMesh for performance. Spacing should be derived from the building bay spacing parameters already stored in the project.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Automatically generate Z-Purlins and C-Girts along the grid lines using InstancedMesh (for performance)."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Z-Purlins appear across all roof bays at regular intervals using InstancedMesh",
+        "C-Girts appear across all wall bays at regular intervals using InstancedMesh",
+        "Toggle in UI shows/hides secondary members",
+        "No significant frame-rate drop when secondary members are visible"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add the following parametric 3D accessory components to the building scene, each controllable via a toggle panel: (a) Turbo Ventilators on the ridge with a continuous spinning animation; (b) Rainwater Gutters and Downspouts along the eave lines; (c) Rolling Shutters and Personnel Doors that snap to wall grid positions on placement; (d) X-Bracing rods on wall bays and roof panels.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Add parametric 3D assets for: Turbo Ventilators (spinning animation). Rainwater Gutters & Downspouts (along the eaves). Rolling Shutters & Personnel Doors (snap-to-grid placement). Bracing (X-bracing for walls/roofs)."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Turbo ventilators appear on ridge and rotate continuously via useFrame animation",
+        "Gutters and downspouts are placed along all eave edges",
+        "Rolling shutters and personnel doors can be placed on wall grid intersections",
+        "X-bracing cross members are rendered in selected wall and/or roof bays",
+        "Each accessory type has an independent toggle in the UI"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Add an environment to the 3D scene: a skybox using a gradient or procedural sky (using @react-three/drei Sky or a CubeCamera approach) with visible clouds, and a ground plane beneath the building with switchable texture options: Concrete, Asphalt, and Grass.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "A 'Skybox' with realistic clouds and a ground plane with texture options (Concrete, Asphalt, Grass)."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Sky background with clouds is visible in the 3D scene",
+        "A ground plane is rendered under the building",
+        "UI control allows switching ground texture between Concrete, Asphalt, and Grass"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Create a client-side utility module `frontend/src/utils/calculateBuildingStats.ts` that computes: (a) Steel weight estimate = total volume of all column and rafter members × 7850 kg/m³; (b) Sheeting area = total roof surface area + total wall surface area minus door/shutter opening areas; (c) Load simulation: accepts Wind Speed (km/h), Seismic Zone (I–V), and Live Load (kN/m²) inputs and returns a 'Design Status' of 'Safe' or 'Requires Validation' using simplified IS 800 / MBMA heuristics.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Develop a utility function calculateBuildingStats.ts that runs client-side",
+          "Steel Weight Estimation",
+          "Sheeting Area",
+          "Load Simulation (Basic)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Steel weight is calculated correctly from member dimensions and density",
+        "Sheeting area subtracts door/opening areas from total surface",
+        "Load simulation returns 'Safe' or 'Requires Validation' based on provided inputs",
+        "Function is importable and used in the Engineering panel UI"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Add an Engineering / BOQ panel in the UI that displays the calculated stats from `calculateBuildingStats.ts` and provides a 'Download BOQ' button. The download must export a CSV file listing all structural and cladding parts with quantities, dimensions, and estimated weights. Optionally render the same data as a printable HTML page for PDF export via browser print.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Generate a downloadable CSV/PDF 'Bill of Materials' (BOQ) listing all parts and total estimated weight."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Engineering panel displays steel weight, sheeting area, and design status",
+        "Download BOQ button triggers a CSV file download in the browser",
+        "CSV includes columns: Part Name, Quantity, Dimensions, Unit Weight, Total Weight",
+        "Design status badge is visually distinct: green for Safe, amber/red for Requires Validation"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Persist engineering calculator inputs (Wind Speed, Seismic Zone, Live Load) and branding settings (signage text, RAL color selections) as part of the project data in the Motoko backend. Extend the project data structure in `backend/main.mo` to store a `brandingSettings` and `engineeringInputs` record on each project, with corresponding update and query methods.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Updated Schema.prisma to store branding and calculator inputs."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Project record includes brandingSettings (signageText, ralColors for roof/wall/trim/structure) and engineeringInputs (windSpeed, seismicZone, liveLoad)",
+        "Update method accepts and stores these fields",
+        "Query method returns these fields with the project",
+        "Existing projects default to empty/null values without breaking"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Create a `BuildingSignage` React Three Fiber component that renders extruded 3D text geometry on the front fascia of the building. Accept a text string input (e.g., 'Factory A') from a UI text field. Use `@react-three/drei`'s `Text3D` or Three.js `ExtrudeGeometry` with a font. Mount the signage centered on the front gable face.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Create a BuildingSignage component.",
+          "Extrude the text into 3D geometry and mount it on the front fascia of the building."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Signage text is visible as 3D extruded geometry on the front fascia",
+        "Text updates in real-time as user types in the input field",
+        "Signage color follows the 'Trim' RAL color selection",
+        "Component can be toggled on/off"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Add a RAL Color Picker panel in the UI with four independent color pickers for: Roof Cladding, Wall Cladding, Trims, and Structural Members. Provide a curated list of at least 20 common RAL codes with their hex equivalents as selectable swatches. Applying a color updates the corresponding 3D materials in the scene immediately.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "RAL Color Picker: Integrate a color palette allowing users to independently color the Roof, Wall Cladding, Trims, and Structures using standard RAL codes."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Four separate RAL color pickers are shown for Roof, Wall Cladding, Trims, and Structure",
+        "Selecting a RAL swatch immediately updates the corresponding 3D material color",
+        "RAL code and name are displayed for each swatch",
+        "Selected colors are persisted to the backend project record"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Create a `WalkthroughController.tsx` component implementing a first-person walkthrough mode inside the building using `PointerLockControls` from `@react-three/drei`. Implement WASD keyboard movement and mouse-look. Add basic collision detection to prevent the camera from passing through wall and column meshes. Add a toggle button in the UI to switch between Orbit View (exterior, using OrbitControls) and Interior View (first-person inside the building looking up at the rafters).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Create a WalkthroughController.tsx using PointerLockControls",
+          "Controls: WASD keys to walk, Mouse to look.",
+          "Collision Detection: Prevent the camera from walking through walls or columns.",
+          "A toggle to switch from 'Orbit View' (Outside) to 'Interior View' (Inside looking up at the rafters)."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking 'Enter Building Tour' locks the pointer and enables first-person movement",
+        "WASD keys move the camera forward/back/left/right inside the building",
+        "Mouse movement rotates the view while pointer is locked",
+        "Camera does not pass through wall or column geometries",
+        "Pressing Escape or clicking a toggle exits walkthrough and restores OrbitControls",
+        "Interior view starts at ground level looking toward the rafters"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Implement a client-side video export feature using the MediaRecorder API. Add an 'Export Video' button that starts recording the Three.js canvas at high bitrate (target 8–15 Mbps) while playing through the erection sequence animation from step 0 to the final step. When the animation completes, stop the recording and trigger a browser download of the resulting WebM file.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Alternative (Client-side): If server-side is too complex, provide a WebM recording implementation using canvas-record or MediaRecorder API with high bitrate settings."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Export Video button is visible in the viewer controls",
+        "Clicking it plays the full erection sequence while recording the canvas",
+        "Recording uses MediaRecorder with a high bitrate codec (VP9 or VP8)",
+        "A WebM file is automatically downloaded when recording ends",
+        "Button shows a recording indicator while capture is in progress"
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Add a 'Shadow Study' feature: a 'Time of Day' slider (range 6:00–20:00) that dynamically repositions a `DirectionalLight` in the 3D scene to simulate sun angle at the selected time, casting real-time shadows through the building. Shadows should be visible on the ground plane and interior surfaces, enabling skylight planning. Enable `castShadow` and `receiveShadow` on all relevant meshes.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Add a 'Time of Day' slider that moves the Sun position to show how shadows fall inside the building (crucial for skylight planning)."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Time of Day slider is accessible in the UI panel",
+        "Moving the slider repositions the sun light and updates shadows in real-time",
+        "Shadows are cast on the ground plane and interior floor",
+        "When skylights are enabled, light patches are visible on the interior floor"
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Add a 'Clearance Check' tool: render a draggable 3D box inside the building representing a standard vehicle (use Truck preset: ~6m L × 2.5m W × 3.5m H, and Forklift preset: ~3m L × 1.5m W × 2.2m H). Allow the user to drag it along the floor plane using pointer events. Highlight the box red if it intersects with any structural member (column, knee-brace) and green when clearance is confirmed.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Add a visual '3D Cube' representing a standard Truck or Forklift that the user can drag inside the building to check if it fits under the knee-braces."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clearance Check toggle adds a draggable 3D box to the scene",
+        "User can select Truck or Forklift preset sizes",
+        "Box can be dragged along the floor plane with mouse/pointer",
+        "Box turns red when it intersects a structural member, green when clear",
+        "Clearance check is independent of walkthrough mode and works in orbit view"
+      ]
+    }
+  ],
+  "constraints": [
+    "All backend logic must remain in the single Motoko actor in backend/main.mo",
+    "Do not use external databases, cloud storage (S3), email services, or server-side video rendering (Puppeteer/Remotion/FFMPEG) — use client-side MediaRecorder WebM export instead",
+    "Do not modify files in frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "No Python or Node.js backend workers — this platform is Motoko-only",
+    "Video export must be fully client-side using MediaRecorder API"
+  ],
+  "nonGoals": [
+    "Server-side video rendering pipeline using Puppeteer, Remotion, or FFMPEG",
+    "S3 file storage or email delivery of rendered video",
+    "External authentication providers beyond Internet Identity",
+    "Logo image upload for 3D signage (text-only signage is in scope)",
+    "Full structural engineering compliance certification (load simulation is heuristic only)",
+    "Prisma or any SQL/NoSQL schema changes (Motoko stable variables only)"
+  ],
+  "imageRequirements": {
+    "required": [
+      "Seamless trapezoidal metal roofing sheet texture, top-down view with corrugated ridges (cladding-trapezoidal.dim_512x512.png)",
+      "Seamless standing seam metal roof texture, top-down view with raised parallel seams (cladding-standing-seam.dim_512x512.png)",
+      "Seamless concrete ground texture, neutral grey with subtle aggregate detail (ground-concrete.dim_512x512.png)",
+      "Seamless asphalt ground texture, dark grey with fine aggregate grain (ground-asphalt.dim_512x512.png)",
+      "Seamless grass ground texture, green with natural blade variation (ground-grass.dim_512x512.png)"
+    ],
+    "edits": []
+  }
+}

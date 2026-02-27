@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.375rem;
+
+    /* Industrial dark theme - charcoal + amber */
+    --background: 0.16 0.005 240;
+    --foreground: 0.92 0.01 240;
+
+    --card: 0.19 0.006 240;
+    --card-foreground: 0.92 0.01 240;
+
+    --popover: 0.22 0.007 240;
+    --popover-foreground: 0.92 0.01 240;
+
+    /* Amber primary */
+    --primary: 0.72 0.17 65;
+    --primary-foreground: 0.12 0.005 240;
+
+    --secondary: 0.24 0.008 240;
+    --secondary-foreground: 0.85 0.01 240;
+
+    --muted: 0.22 0.007 240;
+    --muted-foreground: 0.58 0.01 240;
+
+    --accent: 0.26 0.01 240;
+    --accent-foreground: 0.92 0.01 240;
+
+    --destructive: 0.58 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+
+    --border: 0.28 0.01 240;
+    --input: 0.26 0.01 240;
+    --ring: 0.72 0.17 65;
+
+    --chart-1: 0.72 0.17 65;
+    --chart-2: 0.65 0.15 200;
+    --chart-3: 0.55 0.18 145;
+    --chart-4: 0.68 0.16 280;
+    --chart-5: 0.62 0.19 30;
+
+    --sidebar: 0.14 0.005 240;
+    --sidebar-foreground: 0.92 0.01 240;
+    --sidebar-primary: 0.72 0.17 65;
+    --sidebar-primary-foreground: 0.12 0.005 240;
+    --sidebar-accent: 0.22 0.007 240;
+    --sidebar-accent-foreground: 0.92 0.01 240;
+    --sidebar-border: 0.28 0.01 240;
+    --sidebar-ring: 0.72 0.17 65;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: oklch(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(var(--muted-foreground) / 0.5);
+  }
+}
+
+@layer components {
+  .blueprint-bg {
+    background-image: url('/assets/generated/blueprint-bg.dim_1920x1080.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .grid-overlay {
+    background-image:
+      linear-gradient(oklch(0.72 0.17 65 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.72 0.17 65 / 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .amber-glow {
+    box-shadow: 0 0 20px oklch(0.72 0.17 65 / 0.15), 0 0 40px oklch(0.72 0.17 65 / 0.05);
+  }
+
+  .steel-card {
+    background: oklch(var(--card));
+    border: 1px solid oklch(var(--border));
+    border-radius: var(--radius);
+  }
+}

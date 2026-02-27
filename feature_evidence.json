@@ -1,0 +1,303 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-implement-a-sheeting-and-cladding-system-in-the-3d-scene-add-toggle-controlled-roof-and-wall-cladding-meshes-with-two-profile-texture-types-trapezoidal-and-standing-seam-rendered-via-texture-mapping-on-the-exterior-surfaces-include-a-skylight-polycarbonate-transparency-mode-that-sets-cladding-material-opacity-to-0-3-with-a-distinct-tinted-color-when-enabled",
+      "featureTitle": "Implement a sheeting and cladding system in the 3D scene: add toggle-controlled roof and wall cladding meshes with two profile texture types ('Trapezoidal' and 'Standing Seam') rendered via texture mapping on the exterior surfaces. Include a Skylight/Polycarbonate transparency mode that sets cladding material opacity to ~0.3 with a distinct tinted color when enabled.",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/CladdingControls.tsx",
+        "frontend/src/components/CladdingSystem.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-auto-generate-z-purlin-and-c-girt-secondary-structural-members-along-roof-and-wall-grid-lines-respectively-using-three-js-instancedmesh-for-performance-spacing-should-be-derived-from-the-building-bay-spacing-parameters-already-stored-in-the-project",
+      "featureTitle": "Auto-generate Z-Purlin and C-Girt secondary structural members along roof and wall grid lines respectively using Three.js InstancedMesh for performance. Spacing should be derived from the building bay spacing parameters already stored in the project.",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/CladdingControls.tsx",
+        "frontend/src/components/SecondaryMembers.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-the-following-parametric-3d-accessory-components-to-the-building-scene-each-controllable-via-a-toggle-panel-a-turbo-ventilators-on-the-ridge-with-a-continuous-spinning-animation-b-rainwater-gutters-and-downspouts-along-the-eave-lines-c-rolling-shutters-and-personnel-doors-that-snap-to-wall-grid-positions-on-placement-d-x-bracing-rods-on-wall-bays-and-roof-panels",
+      "featureTitle": "Add the following parametric 3D accessory components to the building scene, each controllable via a toggle panel: (a) Turbo Ventilators on the ridge with a continuous spinning animation; (b) Rainwater Gutters and Downspouts along the eave lines; (c) Rolling Shutters and Personnel Doors that snap to wall grid positions on placement; (d) X-Bracing rods on wall bays and roof panels.",
+      "files": [
+        "frontend/src/components/AccessoryControls.tsx",
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/DoorsAndShutters.tsx",
+        "frontend/src/components/GuttersAndDownspouts.tsx",
+        "frontend/src/components/TurboVentilator.tsx",
+        "frontend/src/components/XBracing.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-environment-to-the-3d-scene-a-skybox-using-a-gradient-or-procedural-sky-using-react-three-drei-sky-or-a-cubecamera-approach-with-visible-clouds-and-a-ground-plane-beneath-the-building-with-switchable-texture-options-concrete-asphalt-and-grass",
+      "featureTitle": "Add an environment to the 3D scene: a skybox using a gradient or procedural sky (using @react-three/drei Sky or a CubeCamera approach) with visible clouds, and a ground plane beneath the building with switchable texture options: Concrete, Asphalt, and Grass.",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/EnvironmentControls.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-client-side-utility-module-frontend-src-utils-calculatebuildingstats-ts-that-computes-a-steel-weight-estimate-total-volume-of-all-column-and-rafter-members-7850-kg-m-b-sheeting-area-total-roof-surface-area-total-wall-surface-area-minus-door-shutter-opening-areas-c-load-simulation-accepts-wind-speed-km-h-seismic-zone-i-v-and-live-load-kn-m-inputs-and-returns-a-design-status-of-safe-or-requires-validation-using-simplified-is-800-mbma-heuristics",
+      "featureTitle": "Create a client-side utility module `frontend/src/utils/calculateBuildingStats.ts` that computes: (a) Steel weight estimate = total volume of all column and rafter members × 7850 kg/m³; (b) Sheeting area = total roof surface area + total wall surface area minus door/shutter opening areas; (c) Load simulation: accepts Wind Speed (km/h), Seismic Zone (I–V), and Live Load (kN/m²) inputs and returns a 'Design Status' of 'Safe' or 'Requires Validation' using simplified IS 800 / MBMA heuristics.",
+      "files": [
+        "frontend/src/utils/calculateBuildingStats.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-engineering-boq-panel-in-the-ui-that-displays-the-calculated-stats-from-calculatebuildingstats-ts-and-provides-a-download-boq-button-the-download-must-export-a-csv-file-listing-all-structural-and-cladding-parts-with-quantities-dimensions-and-estimated-weights-optionally-render-the-same-data-as-a-printable-html-page-for-pdf-export-via-browser-print",
+      "featureTitle": "Add an Engineering / BOQ panel in the UI that displays the calculated stats from `calculateBuildingStats.ts` and provides a 'Download BOQ' button. The download must export a CSV file listing all structural and cladding parts with quantities, dimensions, and estimated weights. Optionally render the same data as a printable HTML page for PDF export via browser print.",
+      "files": [
+        "frontend/src/components/EngineeringInputsForm.tsx",
+        "frontend/src/components/EngineeringPanel.tsx",
+        "frontend/src/pages/ProjectViewer.tsx",
+        "frontend/src/utils/generateBOQ.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-buildingsignage-react-three-fiber-component-that-renders-extruded-3d-text-geometry-on-the-front-fascia-of-the-building-accept-a-text-string-input-e-g-factory-a-from-a-ui-text-field-use-react-three-drei-s-text3d-or-three-js-extrudegeometry-with-a-font-mount-the-signage-centered-on-the-front-gable-face",
+      "featureTitle": "Create a `BuildingSignage` React Three Fiber component that renders extruded 3D text geometry on the front fascia of the building. Accept a text string input (e.g., 'Factory A') from a UI text field. Use `@react-three/drei`'s `Text3D` or Three.js `ExtrudeGeometry` with a font. Mount the signage centered on the front gable face.",
+      "files": [
+        "frontend/src/components/BrandingControls.tsx",
+        "frontend/src/components/BuildingSignage.tsx",
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-ral-color-picker-panel-in-the-ui-with-four-independent-color-pickers-for-roof-cladding-wall-cladding-trims-and-structural-members-provide-a-curated-list-of-at-least-20-common-ral-codes-with-their-hex-equivalents-as-selectable-swatches-applying-a-color-updates-the-corresponding-3d-materials-in-the-scene-immediately",
+      "featureTitle": "Add a RAL Color Picker panel in the UI with four independent color pickers for: Roof Cladding, Wall Cladding, Trims, and Structural Members. Provide a curated list of at least 20 common RAL codes with their hex equivalents as selectable swatches. Applying a color updates the corresponding 3D materials in the scene immediately.",
+      "files": [
+        "frontend/src/components/BrandingControls.tsx",
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/RALColorPicker.tsx",
+        "frontend/src/data/ralColors.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-walkthroughcontroller-tsx-component-implementing-a-first-person-walkthrough-mode-inside-the-building-using-pointerlockcontrols-from-react-three-drei-implement-wasd-keyboard-movement-and-mouse-look-add-basic-collision-detection-to-prevent-the-camera-from-passing-through-wall-and-column-meshes-add-a-toggle-button-in-the-ui-to-switch-between-orbit-view-exterior-using-orbitcontrols-and-interior-view-first-person-inside-the-building-looking-up-at-the-rafters",
+      "featureTitle": "Create a `WalkthroughController.tsx` component implementing a first-person walkthrough mode inside the building using `PointerLockControls` from `@react-three/drei`. Implement WASD keyboard movement and mouse-look. Add basic collision detection to prevent the camera from passing through wall and column meshes. Add a toggle button in the UI to switch between Orbit View (exterior, using OrbitControls) and Interior View (first-person inside the building looking up at the rafters).",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/ViewModeToggle.tsx",
+        "frontend/src/components/WalkthroughController.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-10"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-a-client-side-video-export-feature-using-the-mediarecorder-api-add-an-export-video-button-that-starts-recording-the-three-js-canvas-at-high-bitrate-target-8-15-mbps-while-playing-through-the-erection-sequence-animation-from-step-0-to-the-final-step-when-the-animation-completes-stop-the-recording-and-trigger-a-browser-download-of-the-resulting-webm-file",
+      "featureTitle": "Implement a client-side video export feature using the MediaRecorder API. Add an 'Export Video' button that starts recording the Three.js canvas at high bitrate (target 8–15 Mbps) while playing through the erection sequence animation from step 0 to the final step. When the animation completes, stop the recording and trigger a browser download of the resulting WebM file.",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/VideoExportButton.tsx",
+        "frontend/src/hooks/useVideoExport.ts",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-11"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-shadow-study-feature-a-time-of-day-slider-range-6-00-20-00-that-dynamically-repositions-a-directionallight-in-the-3d-scene-to-simulate-sun-angle-at-the-selected-time-casting-real-time-shadows-through-the-building-shadows-should-be-visible-on-the-ground-plane-and-interior-surfaces-enabling-skylight-planning-enable-castshadow-and-receiveshadow-on-all-relevant-meshes",
+      "featureTitle": "Add a 'Shadow Study' feature: a 'Time of Day' slider (range 6:00–20:00) that dynamically repositions a `DirectionalLight` in the 3D scene to simulate sun angle at the selected time, casting real-time shadows through the building. Shadows should be visible on the ground plane and interior surfaces, enabling skylight planning. Enable `castShadow` and `receiveShadow` on all relevant meshes.",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/ShadowStudy.tsx",
+        "frontend/src/components/ShadowStudyControls.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-12"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-clearance-check-tool-render-a-draggable-3d-box-inside-the-building-representing-a-standard-vehicle-use-truck-preset-6m-l-2-5m-w-3-5m-h-and-forklift-preset-3m-l-1-5m-w-2-2m-h-allow-the-user-to-drag-it-along-the-floor-plane-using-pointer-events-highlight-the-box-red-if-it-intersects-with-any-structural-member-column-knee-brace-and-green-when-clearance-is-confirmed",
+      "featureTitle": "Add a 'Clearance Check' tool: render a draggable 3D box inside the building representing a standard vehicle (use Truck preset: ~6m L × 2.5m W × 3.5m H, and Forklift preset: ~3m L × 1.5m W × 2.2m H). Allow the user to drag it along the floor plane using pointer events. Highlight the box red if it intersects with any structural member (column, knee-brace) and green when clearance is confirmed.",
+      "files": [
+        "frontend/src/components/BuildingSimulator.tsx",
+        "frontend/src/components/ClearanceCheckBox.tsx",
+        "frontend/src/components/ClearanceCheckControls.tsx",
+        "frontend/src/pages/ProjectViewer.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-13"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
